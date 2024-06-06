@@ -17,19 +17,19 @@ fn model(app: &App) -> Model {
     app.set_loop_mode(LoopMode::Rate { update_interval: Duration::from_secs(10000)});
 
     let mut _cells: HashSet<(i32, i32)> = HashSet::new();
-    _cells.insert((0, 0));
-    _cells.insert((-1, -1));
-    _cells.insert((0, -1));
-    _cells.insert((1, -1));
-    _cells.insert((4, -1));
-    _cells.insert((3, -1));
-    _cells.insert((0, -2));
+
+    let cell_amount = random_range(100, 1000);
+    for i in 0..cell_amount {
+        let cell = (random_range(-31, 31), random_range(-31, 31));
+        // println!("{:?}", &cell);
+        _cells.insert(cell);
+    }
 
     Model { _window, _cells, last_update: Instant::now() }
 }
 
 fn update(_app: &App, _model: &mut Model, _update: Update) {
-    if _model.last_update.elapsed() < Duration::from_millis(100) { return };
+    if _model.last_update.elapsed() < Duration::from_millis(25) { return };
     
     let mut kill_list = Vec::new();
     let mut check_list = Vec::new();
