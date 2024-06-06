@@ -2,7 +2,8 @@ use nannou::prelude::{ App, Update, LoopMode, Frame };
 use nannou::color::{ BLACK, WHITE };
 use nannou::rand::random_range;
 use nannou::window;
-use std::collections::HashSet;
+// use std::collections::HashSet;
+use ahash::AHashSet as HashSet;
 use std::time::{ Duration, Instant };
 
 fn main() {
