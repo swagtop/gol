@@ -39,7 +39,8 @@ fn model(app: &App) -> Model {
         _kill_list,
         _check_list,
         _res_list,
-        last_update: Instant::now() }
+        last_update: Instant::now() 
+    }
 }
 
 fn update(_app: &App, _model: &mut Model, _update: Update) {
