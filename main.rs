@@ -19,7 +19,7 @@ fn model(app: &App) -> Model {
     let mut _cells: HashSet<(i32, i32)> = HashSet::new();
 
     let cell_amount = random_range(100, 1000);
-    for i in 0..cell_amount {
+    for _ in 0..cell_amount {
         let cell = (random_range(-31, 31), random_range(-31, 31));
         // println!("{:?}", &cell);
         _cells.insert(cell);
@@ -35,23 +35,24 @@ fn update(_app: &App, _model: &mut Model, _update: Update) {
     let mut check_list = Vec::new();
     let mut res_list = Vec::new();
 
-    let mut cells = &mut _model._cells;
+    let cells = &mut _model._cells;
 
     for cell in cells.iter() {
+        // Mark dead cells that have the potential for life
+        let neighbor_list = get_neighbors(&cell);
+        for neighbor in neighbor_list.iter() {
+            if cells.contains(neighbor) { continue };
+            check_list.push(neighbor.clone());       
+        }
+    
+        // Mark starving cells for death 
         let neighbor_count: u16 = count_neighbors(&cell, &cells);
         if neighbor_count < 2 || neighbor_count > 3 {
             kill_list.push(cell.clone());
         } 
     }
 
-    for cell in cells.iter() {
-        let neighbor_list = get_neighbors(&cell);
-        for neighbor in neighbor_list.iter() {
-            if cells.contains(neighbor) { continue };
-            check_list.push(neighbor.clone());       
-        }
-    }
-
+    // Mark deserving cells for life
     for dead_cell in check_list.iter() {
         let neighbor_count: u16 = count_neighbors(&dead_cell, &cells);
         if neighbor_count == 3 {
@@ -67,7 +68,6 @@ fn update(_app: &App, _model: &mut Model, _update: Update) {
 
 fn view (app: &App, _model: &Model, frame: Frame) {
     let draw = app.draw();
-    let win = app.window_rect();
 
     draw.background().color(BLACK);
     for i in _model._cells.iter() {
