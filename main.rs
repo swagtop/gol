@@ -21,7 +21,6 @@ fn model(app: &App) -> Model {
     let cell_amount = random_range(100, 1000);
     for _ in 0..cell_amount {
         let cell = (random_range(-31, 31), random_range(-31, 31));
-        // println!("{:?}", &cell);
         _cells.insert(cell);
     }
 
@@ -46,7 +45,7 @@ fn update(_app: &App, _model: &mut Model, _update: Update) {
         }
     
         // Mark starving cells for death 
-        let neighbor_count: u16 = count_neighbors(&cell, &cells);
+        let neighbor_count: u8 = count_living_neighbors(&cell, &cells);
         if neighbor_count < 2 || neighbor_count > 3 {
             kill_list.push(cell.clone());
         } 
@@ -54,7 +53,7 @@ fn update(_app: &App, _model: &mut Model, _update: Update) {
 
     // Mark deserving cells for life
     for dead_cell in check_list.iter() {
-        let neighbor_count: u16 = count_neighbors(&dead_cell, &cells);
+        let neighbor_count: u8 = count_living_neighbors(&dead_cell, &cells);
         if neighbor_count == 3 {
             res_list.push(dead_cell.clone());
         }
@@ -94,8 +93,8 @@ fn get_neighbors(coordinates: &(i32, i32)) -> Vec<(i32, i32)> {
     neighbor_list
 }
 
-fn count_neighbors(coordinates: &(i32, i32), cells: &HashSet<(i32, i32)>) -> u16 {
-    let mut count: u16 = 0;
+fn count_living_neighbors(coordinates: &(i32, i32), cells: &HashSet<(i32, i32)>) -> u8 {
+    let mut count: u8 = 0;
     let neighbor_list = get_neighbors(&coordinates);
     for neighbor in neighbor_list.iter() {
         if cells.contains(&neighbor) { count += 1 };
