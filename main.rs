@@ -1,6 +1,9 @@
-use nannou::prelude::*;
+use nannou::prelude::{ App, Update, LoopMode, Frame };
+use nannou::color::{ BLACK, WHITE };
+use nannou::rand::random_range;
+use nannou::window;
 use std::collections::HashSet;
-use std::time::{Duration, Instant};
+use std::time::{ Duration, Instant };
 
 fn main() {
     nannou::app(model).update(update).run()
