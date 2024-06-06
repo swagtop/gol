@@ -22,7 +22,7 @@ fn model(app: &App) -> Model {
 
     let mut _cells: HashSet<(i32, i32)> = HashSet::new();
 
-    let cell_amount = random_range(100, 1000);
+    let cell_amount = random_range(100, 2000);
     for _ in 0..cell_amount {
         let cell = (random_range(-31, 31), random_range(-31, 31));
         _cells.insert(cell);
