@@ -29,9 +29,9 @@ fn model(app: &App) -> Model {
     let mut _res_list: Vec<(i32, i32)> = Vec::new();
     let mut _neighbor_list: [(i32, i32); 8] = [(0, 0); 8];
 
-    let cell_amount = random_range(100, 2000);
+    let cell_amount = random_range(2500, 5000);
     for _ in 0..cell_amount {
-        let cell = (random_range(-31, 31), random_range(-31, 31));
+        let cell = (random_range(-100, 100), random_range(-100, 100));
         _cells.insert(cell);
     }
 
@@ -106,7 +106,7 @@ fn dump_neighbors(coordinates: &(i32, i32), list: &mut [(i32, i32); 8]) {
     let (x_left, x_right) = (x.overflowing_sub(1).0, x.overflowing_add(1).0);
     let (y_up, y_down) = (y.overflowing_sub(1).0, y.overflowing_add(1).0);
 
-    list[0] = (x_left,  y_up  );
+    list[0] = (x_left,  y_up  ); 
     list[1] = (x,       y_up  );
     list[2] = (x_right, y_up  );
     list[3] = (x_left,  y     );
@@ -123,3 +123,40 @@ fn count_living_neighbors(list: &[(i32, i32); 8], cells: &HashSet<(i32, i32)>) -
     }
     count
 }
+
+// 
+// 
+//                     # #                     # # 
+//                     # #                     # # 
+//                     # #                     # # 
+//                     # #                     # # 
+//                     # # # #             # # # # 
+//                     # # # #             # # # # 
+// 
+//
+//     # # # # # #         # # # #     # # # #         # # # # # #
+//     # # # # # #         # # # #     # # # #         # # # # # #
+//             # #     # #     # #     # #     # #     # #
+//             # #     # #     # #     # #     # #     # #
+//                     # # # #             # # # #
+//                     # # # #             # # # #
+//
+//
+//
+//
+//                     # # # #             # # # #
+//                     # # # #             # # # #
+//             # #     # #     # #     # #     # #     # #
+//             # #     # #     # #     # #     # #     # #
+//     # # # # # #         # # # #     # # # #         # # # # # #
+//     # # # # # #         # # # #     # # # #         # # # # # #
+//
+//
+//                     # # # #             # # # #
+//                     # # # #             # # # #
+//                     # #                     # #
+//                     # #                     # #
+//                     # #                     # #
+//                     # #                     # #
+//
+//
