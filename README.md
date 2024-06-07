@@ -6,4 +6,4 @@ This project was created as my first Rust project, to get a feel for the languag
 
 The game keeps track of which cells are alive by storing the coordinates of live cells in a hash set. When cells are given life or killed, their coordinates are simply inserted into or removed from the hash set.
 
-I recommend that you use `cargo run --release`, if you'd like to check it out, as the performance in release mode is so much better. You can mode the view by clicking in the direction you want to travel, and scrolling to zoom in and out.
+I recommend that you use `cargo run --release`, if you'd like to check it out, as the performance in release mode is so much better. You can move the view by clicking in the direction you want to travel, and scrolling to zoom in and out.
