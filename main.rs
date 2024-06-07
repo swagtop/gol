@@ -16,6 +16,7 @@ struct Model {
     _kill_list: Vec<(i32, i32)>,
     _check_list: Vec<(i32, i32)>,
     _res_list: Vec<(i32, i32)>,
+    _neighbor_list: [(i32, i32); 8],
     last_update: Instant,
 }
 
@@ -26,6 +27,7 @@ fn model(app: &App) -> Model {
     let mut _kill_list: Vec<(i32, i32)> = Vec::new();
     let mut _check_list: Vec<(i32, i32)> = Vec::new();
     let mut _res_list: Vec<(i32, i32)> = Vec::new();
+    let mut _neighbor_list: [(i32, i32); 8] = [(0, 0); 8];
 
     let cell_amount = random_range(100, 2000);
     for _ in 0..cell_amount {
@@ -39,6 +41,7 @@ fn model(app: &App) -> Model {
         _kill_list,
         _check_list,
         _res_list,
+        _neighbor_list,
         last_update: Instant::now() 
     }
 }
@@ -51,13 +54,12 @@ fn update(_app: &App, _model: &mut Model, _update: Update) {
     let kill_list = &mut _model._kill_list;
     let check_list = &mut _model._check_list;
     let res_list = &mut _model._res_list;
-
-    let mut neighbor_list: [(i32, i32); 8] = [(0, 0); 8];
+    let neighbor_list = &mut _model._neighbor_list;
 
     for cell in cells.iter() {
         // Save list of potential new cells
-        dump_neighbors(&cell, &mut neighbor_list);
-        for neighbor in neighbor_list {
+        dump_neighbors(&cell, neighbor_list);
+        for neighbor in neighbor_list.iter() {
             if cells.contains(&neighbor) { continue };
             check_list.push(neighbor.clone());       
         }
@@ -71,7 +73,7 @@ fn update(_app: &App, _model: &mut Model, _update: Update) {
 
     // Check if potential cells pass requirements, save list of those that should be given life
     for dead_cell in check_list.drain(0..) {
-        dump_neighbors(&dead_cell, &mut neighbor_list);
+        dump_neighbors(&dead_cell, neighbor_list);
         let neighbor_count: u8 = count_living_neighbors(&neighbor_list, &cells);
         if neighbor_count == 3 {
             res_list.push(dead_cell);
@@ -100,14 +102,18 @@ fn view (app: &App, _model: &Model, frame: Frame) {
 
 // Dumps the coordinates of the neighbors of the cells coordinates given
 fn dump_neighbors(coordinates: &(i32, i32), list: &mut [(i32, i32); 8]) {
-    list[0] = (coordinates.0 - 1, coordinates.1 - 1);
-    list[1] = (coordinates.0,     coordinates.1 - 1);
-    list[2] = (coordinates.0 + 1, coordinates.1 - 1);
-    list[3] = (coordinates.0 - 1, coordinates.1    );
-    list[4] = (coordinates.0 + 1, coordinates.1    );
-    list[5] = (coordinates.0 - 1, coordinates.1 + 1);
-    list[6] = (coordinates.0,     coordinates.1 + 1);
-    list[7] = (coordinates.0 + 1, coordinates.1 + 1);
+    let (x, y) = coordinates.clone();
+    let (x_left, x_right) = (x.overflowing_sub(1).0, x.overflowing_add(1).0);
+    let (y_up, y_down) = (y.overflowing_sub(1).0, y.overflowing_add(1).0);
+
+    list[0] = (x_left,  y_up  );
+    list[1] = (x,       y_up  );
+    list[2] = (x_right, y_up  );
+    list[3] = (x_left,  y     );
+    list[4] = (x_right, y     );
+    list[5] = (x_left,  y_down);
+    list[6] = (x,       y_down);
+    list[7] = (x_right, y_down);
 }
 
 fn count_living_neighbors(list: &[(i32, i32); 8], cells: &HashSet<(i32, i32)>) -> u8 {
