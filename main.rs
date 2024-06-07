@@ -1,6 +1,7 @@
-use nannou::prelude::{ App, Update, Frame, MouseButton::Left, };
+use nannou::prelude::{ App, Update, Frame, MouseButton::Left, Vec2 };
 use nannou::winit::event::WindowEvent as WinitEvent;
-use nannou::winit::event::ElementState::{ Pressed, Released, };
+use nannou::winit::event::ElementState::{ Pressed, Released};
+use nannou::prelude::MouseScrollDelta;
 use nannou::color::{ BLACK, WHITE };
 use nannou::window;
 use nannou::rand::random_range;
@@ -19,7 +20,8 @@ struct Model {
     check_list: Vec<(i32, i32)>,
     res_list: Vec<(i32, i32)>,
     neighbor_list: [(i32, i32); 8],
-    view: (f32, f32),
+    view: Vec2,
+    scale: f32,
     clicked: bool,
     last_update: Instant,
 }
@@ -38,7 +40,8 @@ fn model(app: &App) -> Model {
     let res_list: Vec<(i32, i32)> = Vec::new();
     let neighbor_list: [(i32, i32); 8] = [(0, 0); 8];
 
-    let view: (f32, f32) = (0.0, 0.0);
+    let view: Vec2 = Vec2::from((0.0, 0.0));
+    let scale: f32 = 1.0;
     let clicked: bool = false;
 
     let cell_amount = random_range(2500, 5000);
@@ -55,6 +58,7 @@ fn model(app: &App) -> Model {
         res_list,
         neighbor_list,
         view,
+        scale,
         clicked,
         last_update: Instant::now() 
     }
@@ -64,6 +68,10 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
     match winit_event {
         WinitEvent::MouseInput { state: Pressed, button: Left, .. } => model.clicked = true,
         WinitEvent::MouseInput { state: Released, button: Left, .. } => model.clicked = false,
+        WinitEvent::MouseWheel { delta: MouseScrollDelta::LineDelta(_, y), .. } => {
+                let new_scale = model.scale + y * 0.1;
+                if new_scale > 0.01 && new_scale < 5.0 { model.scale += y * 0.1 }
+        },
         _ => (),
     }
 }
@@ -73,8 +81,8 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 
     // Move view when clicked
     if clicked { 
-        model.view.0 -= app.mouse.x/20.0;
-        model.view.1 -= app.mouse.y/20.0;
+        model.view.x -= app.mouse.x/20.0;
+        model.view.y -= app.mouse.y/20.0;
     }
 
     // Update cells if enough time has passed
@@ -85,17 +93,18 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 }
 
 fn view (app: &App, model: &Model, frame: Frame) {
-    let draw = app.draw();
+    let draw = app.draw().xy(model.view).scale(model.scale);
+    
+    //draw.scale(model.scale);
 
     draw.background().color(BLACK);
     for i in model.cells.iter() {
         draw.rect()
             .w_h(10.0, 10.0)
-            .x((i.0 as f32) * 10.0 + model.view.0)
-            .y((i.1 as f32) * 10.0 + model.view.1)
+            .x((i.0 as f32) * 10.0)
+            .y((i.1 as f32) * 10.0)
             .color(WHITE);
     }
-
     draw.to_frame(app, &frame).unwrap();
 }
 
