@@ -3,6 +3,7 @@ use nannou::winit::event::WindowEvent as WinitEvent;
 use nannou::winit::event::ElementState::{ Pressed, Released};
 use nannou::prelude::MouseScrollDelta;
 use nannou::color::{ BLACK, WHITE };
+use nannou::event::Key::*;
 use nannou::window;
 use nannou::rand::random_range;
 // use std::collections::HashSet;
@@ -67,11 +68,26 @@ fn model(app: &App) -> Model {
 
 fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
     match winit_event {
+        WinitEvent::KeyboardInput { input, .. } => if input.state == Pressed { 
+            //println!("{:?}", input);
+            match input.virtual_keycode {
+                Some(Minus) | Some(NumpadAdd) => {
+                    let new_scale = model.scale - 0.20;
+                    if new_scale > 0.01 && new_scale < 3.0 { model.scale = new_scale }
+                },
+                Some(Equals) | Some(Plus) | Some(NumpadSubtract) => {
+                    let new_scale = model.scale + 0.20;
+                    if new_scale > 0.01 && new_scale < 3.0 { model.scale = new_scale }
+                }
+                Some(H) => model.view = (0.0, 0.0).into(),
+                _ => (),
+        }
+    }
         WinitEvent::MouseInput { state: Pressed, button: Left, .. } => model.clicked = true,
         WinitEvent::MouseInput { state: Released, button: Left, .. } => model.clicked = false,
         WinitEvent::MouseWheel { delta: MouseScrollDelta::LineDelta(_, y), .. } => {
                 let new_scale = model.scale + y * 0.1;
-                if new_scale > 0.01 && new_scale < 5.0 { model.scale += y * 0.1 }
+                if new_scale > 0.01 && new_scale < 3.0 { model.scale = new_scale }
         },
         _ => (),
     }
@@ -94,16 +110,14 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
-    let draw = app.draw().xy(model.view).scale(model.scale);
-    
-    //draw.scale(model.scale);
+    let draw = app.draw()/*.xy(model.view)*/.scale(model.scale);
 
     draw.background().color(BLACK);
     for cell in model.cells.iter() {
         draw.rect()
             .w_h(10.0, 10.0)
-            .x((cell.0 as f32) * 10.0)
-            .y((cell.1 as f32) * 10.0)
+            .x((cell.0 as f32) * 10.0 + model.view.x)
+            .y((cell.1 as f32) * 10.0 + model.view.y)
             .color(WHITE);
     }
     draw.to_frame(app, &frame).unwrap();
