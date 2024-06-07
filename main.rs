@@ -44,6 +44,7 @@ fn model(app: &App) -> Model {
     let scale: f32 = 1.0;
     let clicked: bool = false;
 
+    // Spawn random amount of cells in random position within range
     let cell_amount = random_range(2500, 5000);
     for _ in 0..cell_amount {
         let cell = (random_range(-100, 100), random_range(-100, 100));
@@ -92,17 +93,17 @@ fn update(app: &App, model: &mut Model, _update: Update) {
     };
 }
 
-fn view (app: &App, model: &Model, frame: Frame) {
+fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw().xy(model.view).scale(model.scale);
     
     //draw.scale(model.scale);
 
     draw.background().color(BLACK);
-    for i in model.cells.iter() {
+    for cell in model.cells.iter() {
         draw.rect()
             .w_h(10.0, 10.0)
-            .x((i.0 as f32) * 10.0)
-            .y((i.1 as f32) * 10.0)
+            .x((cell.0 as f32) * 10.0)
+            .y((cell.1 as f32) * 10.0)
             .color(WHITE);
     }
     draw.to_frame(app, &frame).unwrap();
