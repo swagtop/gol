@@ -26,6 +26,7 @@ struct Model {
     scale: f32,
     clicked: bool,
     show_stats: bool,
+    dark_mode: bool,
     last_update: Instant,
 }
 
@@ -47,6 +48,7 @@ fn model(app: &App) -> Model {
     let scale: f32 = 10.0;
     let clicked: bool = false;
     let show_stats: bool = false;
+    let dark_mode: bool = true;
 
     // Spawn random amount of cells in random position within range
     let cell_amount = random_range(2500, 5000);
@@ -66,6 +68,7 @@ fn model(app: &App) -> Model {
         scale,
         clicked,
         show_stats,
+        dark_mode,
         last_update: Instant::now() 
     }
 }
@@ -85,6 +88,7 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
                 }
                 Some(H) => model.view = (0.0, 0.0).into(),
                 Some(Tab) => model.show_stats = !model.show_stats,
+                Some(C) => model.dark_mode = !model.dark_mode,
                 _ => (),
         }
     }
@@ -117,24 +121,30 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw()/*.scale(model.scale)*/;
 
-    draw.background().color(BLACK);
+    let cell_color;
+    let background_color;
+
+    if model.dark_mode { cell_color = WHITE; background_color = BLACK; }
+    else { cell_color = BLACK; background_color = WHITE; }
+
+    draw.background().color(background_color);
     for cell in model.cells.iter() {
         draw.scale(model.scale).rect()
             .w_h(1.0, 1.0)
             .x((cell.0 as f32) + model.view.x)
             .y((cell.1 as f32) + model.view.y)
-            .color(WHITE);
+            .color(cell_color);
     }
 
     if model.show_stats {
         let corner = Rect::from_w_h(0.0, 0.0).top_left_of(frame.rect());
         let coordinates = ((-model.view.x) as i32).to_string() + ", " + &((-model.view.y) as i32).to_string();
         //let (width, height) = frame.rect().w_h();
-        draw.text("Coordinates:").x(corner.x() + 100.0).y(corner.y() - 2.5).left_justify();
-        draw.text(&coordinates).x(corner.x() + 100.0).y(corner.y() - 12.5).left_justify();
+        draw.text("Coordinates:").x(corner.x() + 100.0).y(corner.y() - 2.5).color(cell_color).left_justify();
+        draw.text(&coordinates).x(corner.x() + 100.0).y(corner.y() - 12.5).color(cell_color).left_justify();
         
-        draw.text("Live cells:").x(corner.x() + 100.0).y(corner.y() - 22.5).left_justify();
-        draw.text(&model.cells.len().to_string()).x(corner.x() + 100.0).y(corner.y() - 32.5).left_justify();
+        draw.text("Live cells:").x(corner.x() + 100.0).y(corner.y() - 22.5).color(cell_color).left_justify();
+        draw.text(&model.cells.len().to_string()).x(corner.x() + 100.0).y(corner.y() - 32.5).color(cell_color).left_justify();
     }
 
     draw.to_frame(app, &frame).unwrap();
