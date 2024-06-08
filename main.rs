@@ -5,6 +5,7 @@ use nannou::prelude::MouseScrollDelta;
 use nannou::color::{ BLACK, WHITE };
 use nannou::event::Key::*;
 use nannou::window;
+use nannou::prelude::Rect;
 use nannou::rand::random_range;
 // use std::collections::HashSet;
 use ahash::AHashSet as HashSet;
@@ -24,6 +25,7 @@ struct Model {
     view: Vec2,
     scale: f32,
     clicked: bool,
+    show_stats: bool,
     last_update: Instant,
 }
 
@@ -42,8 +44,9 @@ fn model(app: &App) -> Model {
     let neighbor_list: [(i32, i32); 8] = [(0, 0); 8];
 
     let view: Vec2 = Vec2::from((0.0, 0.0));
-    let scale: f32 = 1.0;
+    let scale: f32 = 10.0;
     let clicked: bool = false;
+    let show_stats: bool = false;
 
     // Spawn random amount of cells in random position within range
     let cell_amount = random_range(2500, 5000);
@@ -62,6 +65,7 @@ fn model(app: &App) -> Model {
         view,
         scale,
         clicked,
+        show_stats,
         last_update: Instant::now() 
     }
 }
@@ -72,22 +76,23 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
             //println!("{:?}", input);
             match input.virtual_keycode {
                 Some(Minus) | Some(NumpadAdd) => {
-                    let new_scale = model.scale - 0.20;
-                    if new_scale > 0.01 && new_scale < 3.0 { model.scale = new_scale }
+                    let new_scale = model.scale - 2.0;
+                    if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
                 },
                 Some(Equals) | Some(Plus) | Some(NumpadSubtract) => {
-                    let new_scale = model.scale + 0.20;
-                    if new_scale > 0.01 && new_scale < 3.0 { model.scale = new_scale }
+                    let new_scale = model.scale + 2.0;
+                    if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
                 }
                 Some(H) => model.view = (0.0, 0.0).into(),
+                Some(Tab) => model.show_stats = !model.show_stats,
                 _ => (),
         }
     }
         WinitEvent::MouseInput { state: Pressed, button: Left, .. } => model.clicked = true,
         WinitEvent::MouseInput { state: Released, button: Left, .. } => model.clicked = false,
         WinitEvent::MouseWheel { delta: MouseScrollDelta::LineDelta(_, y), .. } => {
-                let new_scale = model.scale + y * 0.1;
-                if new_scale > 0.01 && new_scale < 3.0 { model.scale = new_scale }
+                let new_scale = model.scale + y;
+                if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
         },
         _ => (),
     }
@@ -98,8 +103,8 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 
     // Move view when clicked
     if clicked { 
-        model.view.x -= app.mouse.x/20.0;
-        model.view.y -= app.mouse.y/20.0;
+        model.view.x -= app.mouse.x/200.0;
+        model.view.y -= app.mouse.y/200.0;
     }
 
     // Update cells if enough time has passed
@@ -110,16 +115,28 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
-    let draw = app.draw()/*.xy(model.view)*/.scale(model.scale);
+    let draw = app.draw()/*.scale(model.scale)*/;
 
     draw.background().color(BLACK);
     for cell in model.cells.iter() {
-        draw.rect()
-            .w_h(10.0, 10.0)
-            .x((cell.0 as f32) * 10.0 + model.view.x)
-            .y((cell.1 as f32) * 10.0 + model.view.y)
+        draw.scale(model.scale).rect()
+            .w_h(1.0, 1.0)
+            .x((cell.0 as f32) + model.view.x)
+            .y((cell.1 as f32) + model.view.y)
             .color(WHITE);
     }
+
+    if model.show_stats {
+        let corner = Rect::from_w_h(0.0, 0.0).top_left_of(frame.rect());
+        let coordinates = ((-model.view.x) as i32).to_string() + ", " + &((-model.view.y) as i32).to_string();
+        //let (width, height) = frame.rect().w_h();
+        draw.text("Coordinates:").x(corner.x() + 100.0).y(corner.y() - 2.5).left_justify();
+        draw.text(&coordinates).x(corner.x() + 100.0).y(corner.y() - 12.5).left_justify();
+        
+        draw.text("Live cells:").x(corner.x() + 100.0).y(corner.y() - 22.5).left_justify();
+        draw.text(&model.cells.len().to_string()).x(corner.x() + 100.0).y(corner.y() - 32.5).left_justify();
+    }
+
     draw.to_frame(app, &frame).unwrap();
 }
 
