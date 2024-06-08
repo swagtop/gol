@@ -1,5 +1,9 @@
-<div align="center" style="font-size: 40px;"> <img src="gol.png" alt="gol" width="400"/> </div>
-<div align="center" style="font-size: 40px;"> gol </div>
+<div align="center"> <img src="gol.png" alt="gol" width="400"/> </div>
+<div align="center" style="font-size: 40px;"> 
+
+# gol
+
+</div>
 <br>
 
 Very simple and inefficient conway's game of life implementation in Rust, using the [nannou framework](https://github.com/nannou-org/nannou) for rendering.
