@@ -75,23 +75,29 @@ fn model(app: &App) -> Model {
 
 fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
     match winit_event {
-        WinitEvent::KeyboardInput { input, .. } => if input.state == Pressed { 
-            //println!("{:?}", input);
-            match input.virtual_keycode {
-                Some(Minus) | Some(NumpadAdd) => {
-                    let new_scale = model.scale - 2.0;
-                    if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
-                },
-                Some(Equals) | Some(Plus) | Some(NumpadSubtract) => {
-                    let new_scale = model.scale + 2.0;
-                    if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
+        WinitEvent::KeyboardInput { input, .. } => {
+            println!("{:?}", input);
+            if input.state == Pressed {
+                match input.virtual_keycode {
+                    Some(Minus) | Some(NumpadAdd) => {
+                        let new_scale = model.scale - 2.0;
+                        if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
+                    },
+                    Some(Equals) | Some(Plus) | Some(NumpadSubtract) => {
+                        let new_scale = model.scale + 2.0;
+                        if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
+                    }
+                    Some(H) => model.view = (0.0, 0.0).into(),
+                    Some(Tab) => model.show_stats = !model.show_stats,
+                    _ => (),
                 }
-                Some(H) => model.view = (0.0, 0.0).into(),
-                Some(Tab) => model.show_stats = !model.show_stats,
-                Some(C) => model.dark_mode = !model.dark_mode,
-                _ => (),
+            } else if input.state == Released {
+                match input.virtual_keycode {
+                    Some(C) => model.dark_mode = !model.dark_mode,
+                    _ => (),
+                }
+            }
         }
-    }
         WinitEvent::MouseInput { state: Pressed, button: Left, .. } => model.clicked = true,
         WinitEvent::MouseInput { state: Released, button: Left, .. } => model.clicked = false,
         WinitEvent::MouseWheel { delta: MouseScrollDelta::LineDelta(_, y), .. } => {
