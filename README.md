@@ -1,4 +1,5 @@
-<div align="center"> ![gol](gol.png) </div>
+![gol](gol.png)
+<br>
 <div align="center" style="font-size: 40px;"> gol </div>
 <br>
 
