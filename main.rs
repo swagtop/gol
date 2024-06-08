@@ -76,7 +76,7 @@ fn model(app: &App) -> Model {
 fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
     match winit_event {
         WinitEvent::KeyboardInput { input, .. } => {
-            println!("{:?}", input);
+            //println!("{:?}", input);
             if input.state == Pressed {
                 match input.virtual_keycode {
                     Some(Minus) | Some(NumpadAdd) => {
@@ -101,8 +101,8 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
         WinitEvent::MouseInput { state: Pressed, button: Left, .. } => model.clicked = true,
         WinitEvent::MouseInput { state: Released, button: Left, .. } => model.clicked = false,
         WinitEvent::MouseWheel { delta: MouseScrollDelta::LineDelta(_, y), .. } => {
-                let new_scale = model.scale + y;
-                if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
+            let new_scale = model.scale + y;
+            if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
         },
         _ => (),
     }
@@ -125,7 +125,7 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
-    let draw = app.draw()/*.scale(model.scale)*/;
+    let draw = app.draw();
 
     let cell_color;
     let background_color;
@@ -144,13 +144,30 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     if model.show_stats {
         let corner = Rect::from_w_h(0.0, 0.0).top_left_of(frame.rect());
-        let coordinates = ((-model.view.x) as i32).to_string() + ", " + &((-model.view.y) as i32).to_string();
-        //let (width, height) = frame.rect().w_h();
-        draw.text("Coordinates:").x(corner.x() + 100.0).y(corner.y() - 2.5).color(cell_color).left_justify();
-        draw.text(&coordinates).x(corner.x() + 100.0).y(corner.y() - 12.5).color(cell_color).left_justify();
+        let coordinates = format!("{}, {}", (-model.view.x) as i32, (-model.view.y) as i32);
         
-        draw.text("Live cells:").x(corner.x() + 100.0).y(corner.y() - 22.5).color(cell_color).left_justify();
-        draw.text(&model.cells.len().to_string()).x(corner.x() + 100.0).y(corner.y() - 32.5).color(cell_color).left_justify();
+        draw.text("Coordinates:")
+            .x(corner.x() + 100.0)
+            .y(corner.y() - 2.5)
+            .color(cell_color)
+            .left_justify();
+        draw.text(&coordinates)
+            .x(corner.x() + 100.0)
+            .y(corner.y() - 12.5)
+            .color(cell_color)
+            .left_justify();
+        
+        draw.text("Live cells:")
+            .x(corner.x() + 100.0)
+            .y(corner.y() - 22.5)
+            .color(cell_color)
+            .left_justify();
+        draw.text(&model.cells.len()
+            .to_string())
+            .x(corner.x() + 100.0)
+            .y(corner.y() - 32.5)
+            .color(cell_color)
+            .left_justify();
     }
 
     draw.to_frame(app, &frame).unwrap();
@@ -186,6 +203,7 @@ fn update_cells(model: &mut Model) {
     let kill_list = &mut model.kill_list;
     let check_list = &mut model.check_list;
     let res_list = &mut model.res_list;
+
     let neighbor_list = &mut model.neighbor_list;
 
     for cell in cells.iter() {
@@ -213,7 +231,7 @@ fn update_cells(model: &mut Model) {
     }
 
     for cell in kill_list.drain(0..) { cells.remove(&cell); }  
-    for dead_cell in res_list.drain(0..) { cells.insert(dead_cell); } 
+    for resurrected_cell in res_list.drain(0..) { cells.insert(resurrected_cell); }
 }
 
 // 
