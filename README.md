@@ -1,5 +1,4 @@
-<img src="gol.png" alt="gol" width="200"/>
-<br>
+<div align="center" style="font-size: 40px;"> <img src="gol.png" alt="gol" width="400"/> </div>
 <div align="center" style="font-size: 40px;"> gol </div>
 <br>
 
