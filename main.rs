@@ -113,8 +113,8 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 
     // Move view when clicked
     if clicked { 
-        model.view.x -= app.mouse.x/200.0;
-        model.view.y -= app.mouse.y/200.0;
+        model.view.x -= app.mouse.x/100.0/model.scale;
+        model.view.y -= app.mouse.y/100.0/model.scale;
     }
 
     // Update cells if enough time has passed
