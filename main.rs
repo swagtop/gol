@@ -39,9 +39,11 @@ fn model(app: &App) -> Model {
         .unwrap();
 
     let mut cells: HashSet<(i32, i32)> = HashSet::new();
+
     let kill_list: Vec<(i32, i32)> = Vec::new();
     let check_list: Vec<(i32, i32)> = Vec::new();
     let res_list: Vec<(i32, i32)> = Vec::new();
+
     let neighbor_list: [(i32, i32); 8] = [(0, 0); 8];
 
     let view: Vec2 = Vec2::from((0.0, 0.0));
@@ -89,6 +91,11 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
                     }
                     Some(H) => model.view = (0.0, 0.0).into(),
                     Some(Tab) => model.show_stats = !model.show_stats,
+                    Some(J) => {
+                        let cells: Vec<(i32, i32)> = model.cells.clone().into_iter().collect();
+                        let random_cell = cells[random_range(0, cells.len())];
+                        (model.view.x, model.view.y) = (-random_cell.0 as f32, -random_cell.1 as f32);
+                    }
                     _ => (),
                 }
             } else if input.state == Released {
@@ -242,7 +249,7 @@ fn update_cells(model: &mut Model) {
 //                     # #                     # # 
 //                     # # # #             # # # # 
 //                     # # # #             # # # # 
-// 
+//
 //
 //     # # # # # #         # # # #     # # # #         # # # # # #
 //     # # # # # #         # # # #     # # # #         # # # # # #

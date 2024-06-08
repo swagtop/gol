@@ -1,4 +1,6 @@
-# gol
+<div align="center"> ![gol](gol.png) </div>
+<div align="center" style="font-size: 40px;"> gol </div>
+<br>
 
 Very simple and inefficient conway's game of life implementation in Rust, using the [nannou framework](https://github.com/nannou-org/nannou) for rendering.
 
@@ -6,4 +8,15 @@ This project was created as my first Rust project, to get a feel for the languag
 
 The game keeps track of which cells are alive by storing the coordinates of live cells in a hash set. When cells are given life or killed, their coordinates are simply inserted into or removed from the hash set.
 
-When compiling, I recommend that you use `cargo run --release`, as the performance enhancements in release mode makes the program much nicer to use. You can move the view by clicking in the direction you want to travel, and zoom in and out by scrolling, or pressing `+` and `-` on the keyboard. If you get lost in the seemingly endless darkness, press  the `h` key, and you will safely be taken home to (0.0, 0.0). Stats like living amount of cells, or current coordinates, can be toggled with the `tab` key. Dark mode can be toggled with the `c` key.
+When compiling, I recommend that you use `cargo run --release`, as the performance enhancements in release mode makes the program much nicer to use. 
+
+Here are some ways to interact with the game:
+
+| Input                    | Action                       |
+| :------------------      | :--------------------------- |
+| `left-click`             | Move view in mouse direction |
+| `+` `-` (or scrollwheel) | Zooms in or out              |
+| `tab`                    | Toggles stats                |
+| `c`                      | Toggle dark mode             |
+| `h`                      | Jump back home, to (0, 0)    |
+| `j`                      | Jump to random live cell     |
