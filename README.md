@@ -1,4 +1,4 @@
-![gol](gol.png)
+<img src="gol.png" alt="gol" width="200"/>
 <br>
 <div align="center" style="font-size: 40px;"> gol </div>
 <br>
