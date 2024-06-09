@@ -241,8 +241,8 @@ fn update_cells(model: &mut Model) {
     for resurrected_cell in res_list.drain(0..) { cells.insert(resurrected_cell); }
 }
 
-// 
-// 
+//
+//
 //                     # #                     # # 
 //                     # #                     # # 
 //                     # #                     # # 
