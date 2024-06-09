@@ -81,11 +81,11 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
             //println!("{:?}", input);
             if input.state == Pressed {
                 match input.virtual_keycode {
-                    Some(Minus) | Some(NumpadAdd) => {
+                    Some(Minus) | Some(NumpadSubtract) => {
                         let new_scale = model.scale - 2.0;
                         if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
                     },
-                    Some(Equals) | Some(Plus) | Some(NumpadSubtract) => {
+                    Some(Equals) | Some(Plus) | Some(NumpadAdd) => {
                         let new_scale = model.scale + 2.0;
                         if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
                     }
