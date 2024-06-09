@@ -10,24 +10,52 @@ use nannou::rand::random_range;
 // use std::collections::HashSet;
 use ahash::AHashSet as HashSet;
 use std::time::{ Duration, Instant };
+use std::env;
 
 fn main() {
-    nannou::app(model).update(update).run()
+    let args: Vec<String> = env::args().collect();
+
+    // Run benchmark if arg is given
+    if args.len() != 1 { if &args[1] == "benchmark" { run_benchmark(); return; } }
+    
+    nannou::app(model).update(update).run();
 }
 
-struct Model {
-    _window: window::Id,
+struct State {
     cells: HashSet<(i32, i32)>,
     kill_list: Vec<(i32, i32)>,
     check_list: Vec<(i32, i32)>,
     res_list: Vec<(i32, i32)>,
     neighbor_list: [(i32, i32); 8],
+}
+
+struct Model {
+    _window: window::Id,
+    state: State,
     view: Vec2,
     scale: f32,
     clicked: bool,
     show_stats: bool,
     dark_mode: bool,
     last_update: Instant,
+}
+
+fn state() -> State {
+    let cells: HashSet<(i32, i32)> = HashSet::new();
+
+    let kill_list: Vec<(i32, i32)> = Vec::new();
+    let check_list: Vec<(i32, i32)> = Vec::new();
+    let res_list: Vec<(i32, i32)> = Vec::new();
+
+    let neighbor_list: [(i32, i32); 8] = [(0, 0); 8];
+
+    State {
+        cells, 
+        kill_list,
+        check_list,
+        res_list,
+        neighbor_list,
+    }
 }
 
 fn model(app: &App) -> Model {
@@ -38,13 +66,6 @@ fn model(app: &App) -> Model {
         .build()
         .unwrap();
 
-    let mut cells: HashSet<(i32, i32)> = HashSet::new();
-
-    let kill_list: Vec<(i32, i32)> = Vec::new();
-    let check_list: Vec<(i32, i32)> = Vec::new();
-    let res_list: Vec<(i32, i32)> = Vec::new();
-
-    let neighbor_list: [(i32, i32); 8] = [(0, 0); 8];
 
     let view: Vec2 = Vec2::from((0.0, 0.0));
     let scale: f32 = 10.0;
@@ -52,20 +73,18 @@ fn model(app: &App) -> Model {
     let show_stats: bool = false;
     let dark_mode: bool = true;
 
+    let mut state = state();
+
     // Spawn random amount of cells in random position within range
     let cell_amount = random_range(2500, 5000);
     for _ in 0..cell_amount {
         let cell = (random_range(-100, 100), random_range(-100, 100));
-        cells.insert(cell);
+        state.cells.insert(cell);
     }
 
     Model { 
         _window,
-        cells, 
-        kill_list,
-        check_list,
-        res_list,
-        neighbor_list,
+        state,
         view,
         scale,
         clicked,
@@ -92,7 +111,7 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
                     Some(H) => model.view = (0.0, 0.0).into(),
                     Some(Tab) => model.show_stats = !model.show_stats,
                     Some(J) => {
-                        let cells: Vec<(i32, i32)> = model.cells.clone().into_iter().collect();
+                        let cells: Vec<(i32, i32)> = model.state.cells.clone().into_iter().collect();
                         let random_cell = cells[random_range(0, cells.len())];
                         (model.view.x, model.view.y) = (-random_cell.0 as f32, -random_cell.1 as f32);
                     }
@@ -126,9 +145,9 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 
     // Update cells if enough time has passed
     if model.last_update.elapsed() >= Duration::from_millis(25) {
-        update_cells(model);
+        update_cells(&mut model.state);
         model.last_update = Instant::now();
-    };
+    }
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
@@ -141,7 +160,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
     else { cell_color = BLACK; background_color = WHITE; }
 
     draw.background().color(background_color);
-    for cell in model.cells.iter() {
+    for cell in model.state.cells.iter() {
         draw.scale(model.scale).rect()
             .w_h(1.0, 1.0)
             .x((cell.0 as f32) + model.view.x)
@@ -169,7 +188,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .y(corner.y() - 22.5)
             .color(cell_color)
             .left_justify();
-        draw.text(&model.cells.len()
+        draw.text(&model.state.cells.len()
             .to_string())
             .x(corner.x() + 100.0)
             .y(corner.y() - 32.5)
@@ -204,14 +223,14 @@ fn count_living_neighbors(list: &[(i32, i32); 8], cells: &HashSet<(i32, i32)>) -
     count
 }
 
-fn update_cells(model: &mut Model) {
-    let cells = &mut model.cells;
+fn update_cells(state: &mut State) {
+    let cells = &mut state.cells;
     
-    let kill_list = &mut model.kill_list;
-    let check_list = &mut model.check_list;
-    let res_list = &mut model.res_list;
+    let kill_list = &mut state.kill_list;
+    let check_list = &mut state.check_list;
+    let res_list = &mut state.res_list;
 
-    let neighbor_list = &mut model.neighbor_list;
+    let neighbor_list = &mut state.neighbor_list;
 
     for cell in cells.iter() {
         // Save list of potential new cells
@@ -239,6 +258,37 @@ fn update_cells(model: &mut Model) {
 
     for cell in kill_list.drain(0..) { cells.remove(&cell); }  
     for resurrected_cell in res_list.drain(0..) { cells.insert(resurrected_cell); }
+}
+
+fn run_benchmark() {
+    let mut state = state();
+
+    let mut time_vec = Vec::new();
+
+    let updates_per_run = 1000;
+    let cell_amount = 1000;
+    let runs = 1000;
+    println!("Running {} updates on {} cells, {} times", updates_per_run, cell_amount, runs);
+    for i in 0..runs {
+        let begin_time = Instant::now();
+
+        for _ in 0..cell_amount {
+            let cell = (random_range(-100, 100), random_range(-100, 100));
+            state.cells.insert(cell);
+        }
+        for _ in 0..updates_per_run {
+            update_cells(&mut state);
+        }
+
+        let print_string = format!("{} out of {}", i + 1, runs);
+        print!("\r{}", print_string);
+
+        time_vec.push((Instant::now() - begin_time).subsec_millis() as f32);
+
+        state.cells.clear();
+    }
+    println!("");
+    println!("Average runtime over {} runs: {} ms", time_vec.len(), time_vec.iter().sum::<f32>() / time_vec.len() as f32);
 }
 
 //

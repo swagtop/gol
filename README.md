@@ -12,7 +12,7 @@ The universe of the game contains $(2^{32})^2$ unique cells. It is donut shaped,
 
 The game keeps track of which cells are alive by storing the coordinates of live cells in a hash set. When cells are given life or killed, their coordinates are simply inserted into or removed from the hash set.
 
-When compiling, I recommend that you use `cargo run --release`, as the performance enhancements in release mode makes the program much nicer to use. 
+When compiling, I recommend that you use `cargo run --release`, as the performance enhancements in release mode makes the program much nicer to use. If you'd like to run a performance benchmark, add the `benchmark` arg like so: `cargo run --release benchmark`.
 
 Here are some ways to interact with the game:
 
