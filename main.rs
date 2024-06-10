@@ -14,7 +14,7 @@ use std::env;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-
+    
     // Run benchmark if arg is given
     if args.len() != 1 { if &args[1] == "benchmark" { run_benchmark(); return; } }
     
@@ -26,7 +26,6 @@ struct State {
     kill_list: Vec<(i32, i32)>,
     check_list: Vec<(i32, i32)>,
     res_list: Vec<(i32, i32)>,
-    neighbor_list: [(i32, i32); 8],
 }
 
 struct Model {
@@ -47,14 +46,11 @@ fn state() -> State {
     let check_list: Vec<(i32, i32)> = Vec::new();
     let res_list: Vec<(i32, i32)> = Vec::new();
 
-    let neighbor_list: [(i32, i32); 8] = [(0, 0); 8];
-
     State {
         cells, 
         kill_list,
         check_list,
         res_list,
-        neighbor_list,
     }
 }
 
@@ -65,7 +61,6 @@ fn model(app: &App) -> Model {
         .raw_event(raw_window_event)
         .build()
         .unwrap();
-
 
     let view: Vec2 = Vec2::from((0.0, 0.0));
     let scale: f32 = 10.0;
@@ -109,7 +104,6 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
                         if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
                     }
                     Some(H) => model.view = (0.0, 0.0).into(),
-                    Some(Tab) => model.show_stats = !model.show_stats,
                     Some(J) => {
                         let cells: Vec<(i32, i32)> = model.state.cells.clone().into_iter().collect();
                         let random_cell = cells[random_range(0, cells.len())];
@@ -119,6 +113,7 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
                 }
             } else if input.state == Released {
                 match input.virtual_keycode {
+                    Some(Tab) => model.show_stats = !model.show_stats,
                     Some(C) => model.dark_mode = !model.dark_mode,
                     _ => (),
                 }
@@ -200,19 +195,19 @@ fn view(app: &App, model: &Model, frame: Frame) {
 }
 
 // Dumps the coordinates of the neighbors of the cells coordinates given
-fn dump_neighbors(coordinates: &(i32, i32), list: &mut [(i32, i32); 8]) {
-    let (x, y) = coordinates.clone();
+fn dump_neighbors(coordinates: &(i32, i32), array: &mut [(i32, i32); 8]) {
+    let (x, y) = *coordinates;
     let (x_left, x_right) = (x.overflowing_sub(1).0, x.overflowing_add(1).0);
     let (y_up, y_down) = (y.overflowing_sub(1).0, y.overflowing_add(1).0);
 
-    list[0] = (x_left,  y_up  ); 
-    list[1] = (x,       y_up  );
-    list[2] = (x_right, y_up  );
-    list[3] = (x_left,  y     );
-    list[4] = (x_right, y     );
-    list[5] = (x_left,  y_down);
-    list[6] = (x,       y_down);
-    list[7] = (x_right, y_down);
+    array[0] = (x_left,  y_up  ); 
+    array[1] = (x,       y_up  );
+    array[2] = (x_right, y_up  );
+    array[3] = (x_left,  y     );
+    array[4] = (x_right, y     );
+    array[5] = (x_left,  y_down);
+    array[6] = (x,       y_down);
+    array[7] = (x_right, y_down);
 }
 
 fn count_living_neighbors(list: &[(i32, i32); 8], cells: &HashSet<(i32, i32)>) -> u8 {
@@ -230,27 +225,27 @@ fn update_cells(state: &mut State) {
     let check_list = &mut state.check_list;
     let res_list = &mut state.res_list;
 
-    let neighbor_list = &mut state.neighbor_list;
+    let neighbor_array: &mut [(i32, i32); 8] = &mut [(0, 0); 8];
 
     for cell in cells.iter() {
         // Save list of potential new cells
-        dump_neighbors(&cell, neighbor_list);
-        for neighbor in neighbor_list.iter() {
+        dump_neighbors(&cell, neighbor_array);
+        for neighbor in neighbor_array.iter() {
             if cells.contains(&neighbor) { continue };
-            check_list.push(neighbor.clone());       
+            check_list.push(*neighbor);       
         }
     
         // Save list of cells that should be killed
-        let neighbor_count: u8 = count_living_neighbors(&neighbor_list, &cells);
+        let neighbor_count: u8 = count_living_neighbors(&neighbor_array, &cells);
         if neighbor_count < 2 || neighbor_count > 3 {
-            kill_list.push(cell.clone());
+            kill_list.push(*cell);
         } 
     }
 
     // Check if potential cells pass requirements, save list of those that should be given life
     for dead_cell in check_list.drain(0..) {
-        dump_neighbors(&dead_cell, neighbor_list);
-        let neighbor_count: u8 = count_living_neighbors(&neighbor_list, &cells);
+        dump_neighbors(&dead_cell, neighbor_array);
+        let neighbor_count: u8 = count_living_neighbors(&neighbor_array, &cells);
         if neighbor_count == 3 {
             res_list.push(dead_cell);
         }
@@ -267,7 +262,7 @@ fn run_benchmark() {
 
     let updates_per_run = 1000;
     let cell_amount = 1000;
-    let runs = 1000;
+    let runs = 10000;
     println!("Running {} updates on {} cells, {} times", updates_per_run, cell_amount, runs);
     for i in 0..runs {
         let begin_time = Instant::now();
