@@ -1,7 +1,7 @@
 <div align="center"> <img src="gol.webp" alt="screenshot" width="400"/> </div>
 <div align="center" style="font-size: 40px;">
 
-**# gol**
+# gol
 
 </div>
 <br>
