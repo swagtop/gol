@@ -8,7 +8,9 @@ use nannou::window;
 use nannou::prelude::Rect;
 use nannou::rand::random_range;
 // use std::collections::HashSet;
-use ahash::AHashSet as HashSet;
+// use std::collections::BTreeSet as HashSet;
+// use ahash::AHashSet as HashSet;
+use fxhash::FxHashSet as HashSet;
 use std::time::{ Duration, Instant };
 use std::env;
 
@@ -24,7 +26,6 @@ fn main() {
 struct State {
     cells: HashSet<(i32, i32)>,
     kill_list: Vec<(i32, i32)>,
-    check_list: Vec<(i32, i32)>,
     res_list: Vec<(i32, i32)>,
 }
 
@@ -40,16 +41,14 @@ struct Model {
 }
 
 fn state() -> State {
-    let cells: HashSet<(i32, i32)> = HashSet::new();
+    let cells: HashSet<(i32, i32)> = HashSet::default();
 
     let kill_list: Vec<(i32, i32)> = Vec::new();
-    let check_list: Vec<(i32, i32)> = Vec::new();
     let res_list: Vec<(i32, i32)> = Vec::new();
 
     State {
         cells, 
         kill_list,
-        check_list,
         res_list,
     }
 }
@@ -222,32 +221,29 @@ fn update_cells(state: &mut State) {
     let cells = &mut state.cells;
     
     let kill_list = &mut state.kill_list;
-    let check_list = &mut state.check_list;
     let res_list = &mut state.res_list;
 
     let neighbor_array: &mut [(i32, i32); 8] = &mut [(0, 0); 8];
+    let neighbor_neighbor_array: &mut [(i32, i32); 8] = &mut [(0, 0); 8];
 
     for cell in cells.iter() {
-        // Save list of potential new cells
+        // Mark cell for death by neighbor amount
         dump_neighbors(&cell, neighbor_array);
-        for neighbor in neighbor_array.iter() {
-            if cells.contains(&neighbor) { continue };
-            check_list.push(*neighbor);       
-        }
-    
-        // Save list of cells that should be killed
         let neighbor_count: u8 = count_living_neighbors(&neighbor_array, &cells);
         if neighbor_count < 2 || neighbor_count > 3 {
             kill_list.push(*cell);
-        } 
-    }
-
-    // Check if potential cells pass requirements, save list of those that should be given life
-    for dead_cell in check_list.drain(0..) {
-        dump_neighbors(&dead_cell, neighbor_array);
-        let neighbor_count: u8 = count_living_neighbors(&neighbor_array, &cells);
-        if neighbor_count == 3 {
-            res_list.push(dead_cell);
+        }
+        
+        // Check which neighbors are dead
+        for neighbor in neighbor_array.iter() {
+            if cells.contains(&neighbor) { continue };
+            
+            // If neighbor is dead, check if it should be resurrected
+            dump_neighbors(&neighbor, neighbor_neighbor_array);
+            let neighbor_count: u8 = count_living_neighbors(&neighbor_neighbor_array, &cells);
+            if neighbor_count == 3 {
+                res_list.push(*neighbor);
+            }
         }
     }
 
@@ -256,8 +252,6 @@ fn update_cells(state: &mut State) {
 }
 
 fn run_benchmark() {
-    let mut state = state();
-
     let mut time_vec = Vec::new();
 
     let updates_per_run = 1000;
@@ -265,6 +259,8 @@ fn run_benchmark() {
     let runs = 10000;
     println!("Running {} updates on {} cells, {} times", updates_per_run, cell_amount, runs);
     for i in 0..runs {
+        let mut state = state();
+
         let begin_time = Instant::now();
 
         for _ in 0..cell_amount {
@@ -279,9 +275,8 @@ fn run_benchmark() {
         print!("\r{}", print_string);
 
         time_vec.push((Instant::now() - begin_time).subsec_millis() as f32);
-
-        state.cells.clear();
     }
+
     println!("");
     println!("Average runtime over {} runs: {} ms", time_vec.len(), time_vec.iter().sum::<f32>() / time_vec.len() as f32);
 }
