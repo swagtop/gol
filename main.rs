@@ -29,18 +29,6 @@ struct State {
     res_list: Vec<(i32, i32)>,
 }
 
-struct Model {
-    _window: window::Id,
-    state: State,
-    view: Vec2,
-    last_view: Vec2,
-    scale: f32,
-    clicked: bool,
-    show_stats: bool,
-    dark_mode: bool,
-    last_update: Instant,
-}
-
 fn state() -> State {
     let cells: HashSet<(i32, i32)> = HashSet::default();
 
@@ -52,6 +40,19 @@ fn state() -> State {
         kill_list,
         res_list,
     }
+}
+
+struct Model {
+    _window: window::Id,
+    state: State,
+    view: Vec2,
+    last_view: Vec2,
+    scale: f32,
+    clicked: bool,
+    show_stats: bool,
+    generation: usize,
+    dark_mode: bool,
+    last_update: Instant,
 }
 
 fn model(app: &App) -> Model {
@@ -67,6 +68,7 @@ fn model(app: &App) -> Model {
     let scale: f32 = 10.0;
     let clicked: bool = false;
     let show_stats: bool = false;
+    let generation: usize = 0;
     let dark_mode: bool = true;
 
     let mut state = state();
@@ -86,6 +88,7 @@ fn model(app: &App) -> Model {
         scale,
         clicked,
         show_stats,
+        generation,
         dark_mode,
         last_update: Instant::now() 
     }
@@ -122,7 +125,7 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
                     }
                     _ => (),
                 }
-            } else if input.state == Released {
+            } else {
                 match input.virtual_keycode {
                     Some(Tab) => model.show_stats = !model.show_stats,
                     Some(C) => model.dark_mode = !model.dark_mode,
@@ -135,7 +138,7 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
         WinitEvent::MouseWheel { delta: MouseScrollDelta::LineDelta(_, y), .. } => {
             let new_scale = model.scale + y;
             if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
-        },
+        }
         _ => (),
     }
 }
@@ -152,6 +155,7 @@ fn update(app: &App, model: &mut Model, _update: Update) {
     // Update cells if enough time has passed
     if model.last_update.elapsed() >= Duration::from_millis(25) {
         update_cells(&mut model.state);
+        model.generation += 1;
         model.last_update = Instant::now();
     }
 }
@@ -189,44 +193,32 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .color(cell_color)
             .left_justify();
         
-        draw.text("Live cells:")
+        draw.text("Generation:")
             .x(corner.x() + 100.0)
             .y(corner.y() - 22.5)
             .color(cell_color)
             .left_justify();
-        draw.text(&model.state.cells.len()
+        draw.text(&model.generation
             .to_string())
             .x(corner.x() + 100.0)
             .y(corner.y() - 32.5)
             .color(cell_color)
             .left_justify();
+
+        draw.text("Live cells:")
+            .x(corner.x() + 100.0)
+            .y(corner.y() - 42.5)
+            .color(cell_color)
+            .left_justify();
+        draw.text(&model.state.cells.len()
+            .to_string())
+            .x(corner.x() + 100.0)
+            .y(corner.y() - 52.5)
+            .color(cell_color)
+            .left_justify();
     }
 
     draw.to_frame(app, &frame).unwrap();
-}
-
-// Dumps the coordinates of the neighbors of the cells coordinates given
-fn dump_neighbors(coordinates: &(i32, i32), array: &mut [(i32, i32); 8]) {
-    let (x, y) = *coordinates;
-    let (x_left, x_right) = (x.overflowing_sub(1).0, x.overflowing_add(1).0);
-    let (y_up, y_down) = (y.overflowing_sub(1).0, y.overflowing_add(1).0);
-
-    array[0] = (x_left,  y_up  ); 
-    array[1] = (x,       y_up  );
-    array[2] = (x_right, y_up  );
-    array[3] = (x_left,  y     );
-    array[4] = (x_right, y     );
-    array[5] = (x_left,  y_down);
-    array[6] = (x,       y_down);
-    array[7] = (x_right, y_down);
-}
-
-fn count_living_neighbors(list: &[(i32, i32); 8], cells: &HashSet<(i32, i32)>) -> u8 {
-    let mut count: u8 = 0;
-    for neighbor in list {
-        if cells.contains(&neighbor) { count += 1 };
-    }
-    count
 }
 
 fn update_cells(state: &mut State) {
@@ -261,6 +253,30 @@ fn update_cells(state: &mut State) {
 
     for cell in kill_list.drain(0..) { cells.remove(&cell); }  
     for resurrected_cell in res_list.drain(0..) { cells.insert(resurrected_cell); }
+}
+
+// Dumps the coordinates of the neighbors of the cells coordinates given
+fn dump_neighbors(coordinates: &(i32, i32), array: &mut [(i32, i32); 8]) {
+    let (x, y) = *coordinates;
+    let (x_left, x_right) = (x.overflowing_sub(1).0, x.overflowing_add(1).0);
+    let (y_up, y_down) = (y.overflowing_sub(1).0, y.overflowing_add(1).0);
+
+    array[0] = (x_left,  y_up  ); 
+    array[1] = (x,       y_up  );
+    array[2] = (x_right, y_up  );
+    array[3] = (x_left,  y     );
+    array[4] = (x_right, y     );
+    array[5] = (x_left,  y_down);
+    array[6] = (x,       y_down);
+    array[7] = (x_right, y_down);
+}
+
+fn count_living_neighbors(list: &[(i32, i32); 8], cells: &HashSet<(i32, i32)>) -> u8 {
+    let mut count: u8 = 0;
+    for neighbor in list {
+        if cells.contains(&neighbor) { count += 1 };
+    }
+    count
 }
 
 fn run_benchmark() {

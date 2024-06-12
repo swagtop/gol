@@ -47,4 +47,5 @@ As you can see FxHashSet was 7.5 times faster than the standard HashSet implemen
 
 1. Add UI with options for user to choose on start
 2. Add ability to load cell setups from text files
-4. Add drag-and-drop functionality such that files can simply be dropped into the window
+4. Add drag-and-drop functionality such that text files can simply be dropped into the window
+5. Add options to control update speed
