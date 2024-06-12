@@ -33,6 +33,7 @@ struct Model {
     _window: window::Id,
     state: State,
     view: Vec2,
+    last_view: Vec2,
     scale: f32,
     clicked: bool,
     show_stats: bool,
@@ -61,7 +62,8 @@ fn model(app: &App) -> Model {
         .build()
         .unwrap();
 
-    let view: Vec2 = Vec2::from((0.0, 0.0));
+    let view: Vec2 = (0.0, 0.0).into();
+    let last_view: Vec2 = view.clone();
     let scale: f32 = 10.0;
     let clicked: bool = false;
     let show_stats: bool = false;
@@ -80,6 +82,7 @@ fn model(app: &App) -> Model {
         _window,
         state,
         view,
+        last_view,
         scale,
         clicked,
         show_stats,
@@ -102,11 +105,20 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
                         let new_scale = model.scale + 2.0;
                         if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
                     }
-                    Some(H) => model.view = (0.0, 0.0).into(),
+                    Some(H) => {
+                        model.last_view = model.view.clone();
+                        model.view = (0.0, 0.0).into();
+                    }
                     Some(J) => {
+                        model.last_view = model.view.clone();
                         let cells: Vec<(i32, i32)> = model.state.cells.clone().into_iter().collect();
                         let random_cell = cells[random_range(0, cells.len())];
                         (model.view.x, model.view.y) = (-random_cell.0 as f32, -random_cell.1 as f32);
+                    }
+                    Some(Z) => {
+                        let current_view = model.view.clone();
+                        model.view = model.last_view;
+                        model.last_view = current_view;
                     }
                     _ => (),
                 }

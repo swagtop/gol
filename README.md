@@ -26,20 +26,25 @@ Here are some ways to interact with the game:
 | `c`                      | Toggle dark mode             |
 | `h`                      | Jump back home, to (0, 0)    |
 | `j`                      | Jump to random live cell     |
+| `z`                      | Undo last jump               |
 
 ## Insights
 
-I tried out several hash set implementations (even a non-hash one), in search of which would be most performant for this project. 
+I tried out several hash set implementations (and a non-hash one), in search of which would be most performant for this project. 
 
-Here we see the average time to complete 1000 updates, on 1000 randomly placed cells, over 10000 runs:
+Here we see the average time to complete 1000 updates, on 1000 randomly placed cells, over 10,000 runs:
 
-| Set               | Average Time     | Indexed         |
-| :---------------- | :--------------- | :-------------- |
-| std::HashSet      | 26.1372 ms       | 1               |
-| std::BTreeSet     | 19.9894 ms       | 1.3076          |
-| ahash::AHashSet   | 4.7835 ms        | 5.4640          |
-| fxhash::FxHashSet | 3.4792 ms        | 7.5124          |
+| Set                 | Average time     | Times faster than `std::HashSet` |
+| :------------------ | :--------------- | :------------------------------- |
+| `std::HashSet`      | 26.1372 ms       | 1                                |
+| `std::BTreeSet`     | 19.9894 ms       | 1.3076                           |
+| `ahash::AHashSet`   | 4.7835 ms        | 5.4640                           |
+| `fxhash::FxHashSet` | 3.4792 ms        | 7.5124                           |
 
-As you can see FxHashSet was 7.5 times faster than the standard HashSet implementation. Discourse online suggests that FxHash implements the fastest algorithm when it comes to small key sizes. 
+As you can see FxHashSet was 7.5 times faster than the standard HashSet implementation. Discourse online suggests that FxHash implements the fastest algorithm when it comes to small key sizes. This explains the massive performance increase we see here!
 
-This makes perfect sense with the results we are seeing, making FxHashSet perfect for this project.
+## Todo
+
+1. Add UI with options for user to choose on start
+2. Add ability to load cell setups from text files
+4. Add drag-and-drop functionality such that files can simply be dropped into the window
