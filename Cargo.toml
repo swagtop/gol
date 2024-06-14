@@ -13,3 +13,6 @@ nannou = "0.19.0"
 [[bin]]
 name = "gol"
 path = "main.rs"
+
+[profile.release]
+debug = true

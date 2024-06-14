@@ -17,7 +17,7 @@ use std::time::{Duration, Instant};
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    // Run benchmark if arg is given
+    // Run benchmark if arg is given.
     if args.len() != 1 {
         if &args[1] == "benchmark" {
             run_benchmark();
@@ -78,7 +78,7 @@ fn model(app: &App) -> Model {
 
     let mut state = state();
 
-    // Spawn random amount of cells in random position within range
+    // Spawn random amount of cells in random position within range.
     let cell_amount = random_range(2500, 5000);
     for _ in 0..cell_amount {
         let cell = (random_range(-100, 100), random_range(-100, 100));
@@ -170,13 +170,13 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
 fn update(app: &App, model: &mut Model, _update: Update) {
     let clicked = model.clicked;
 
-    // Move view when clicked
+    // Move view when clicked.
     if clicked {
         model.view.x -= app.mouse.x / 100.0 / model.scale;
         model.view.y -= app.mouse.y / 100.0 / model.scale;
     }
 
-    // Update cells if enough time has passed
+    // Update cells if enough time has passed.
     if model.last_update.elapsed() >= Duration::from_millis(25) {
         update_cells(&mut model.state);
         model.generation += 1;
@@ -256,17 +256,17 @@ fn update_cells(state: &mut State) {
     let res_list = &mut state.res_list;
 
     for cell in cells.iter() {
-        // Mark cell for death by neighbor amount
+        // Mark cell for death by neighbor amount.
         let neighbors: [(i32, i32); 8] = get_neighbors(&cell);
-        let neighbor_count: u8 = count_living_neighbors(&neighbors, &cells);
+        let neighbor_count = count_living_neighbors(&neighbors, &cells);
         if neighbor_count < 2 || neighbor_count > 3 {
             kill_list.push(*cell);
         }
 
-        // Iterate through dead neighbors, mark ones deserving for life
+        // Iterate through dead neighbors, mark ones deserving for life.
         for neighbor in neighbors.iter().filter(|&&neighbor| !cells.contains(&neighbor)) {
             let neighbor_neighbors: [(i32, i32); 8] = get_neighbors(&neighbor);
-            let neighbor_count: u8 = count_living_neighbors(&neighbor_neighbors, &cells);
+            let neighbor_count = count_living_neighbors(&neighbor_neighbors, &cells);
             if neighbor_count == 3 {
                 res_list.push(*neighbor);
             }
@@ -281,7 +281,7 @@ fn update_cells(state: &mut State) {
     }
 }
 
-// Returns arrays of the coordinates of the neighbors of the cells coordinates given
+// Returns arrays of the coordinates of the neighbors of the cells coordinates given.
 fn get_neighbors(coordinates: &(i32, i32)) -> [(i32, i32); 8] {
     let (x, y) = *coordinates;
     let (x_left, x_right) = (x.overflowing_sub(1).0, x.overflowing_add(1).0);
@@ -299,14 +299,15 @@ fn get_neighbors(coordinates: &(i32, i32)) -> [(i32, i32); 8] {
     ]
 }
 
-fn count_living_neighbors(list: &[(i32, i32); 8], cells: &HashSet<(i32, i32)>) -> u8 {
-    let mut count: u8 = 0;
-    for neighbor in list {
-        if cells.contains(&neighbor) {
-            count += 1
-        };
-    }
-    count
+fn count_living_neighbors(neighbors: &[(i32, i32); 8], cells: &HashSet<(i32, i32)>) -> usize {
+    cells.contains(&neighbors[0]) as usize +
+    cells.contains(&neighbors[1]) as usize +
+    cells.contains(&neighbors[2]) as usize +
+    cells.contains(&neighbors[3]) as usize +
+    cells.contains(&neighbors[4]) as usize +
+    cells.contains(&neighbors[5]) as usize +
+    cells.contains(&neighbors[6]) as usize +
+    cells.contains(&neighbors[7]) as usize
 }
 
 fn run_benchmark() {
