@@ -34,12 +34,12 @@ I tried out several hash set implementations (and a non-hash one), in search of 
 
 Here we see the average time to complete 1000 updates, on 1000 randomly placed cells, over 10,000 runs:
 
-| Set                 | Average time     | Times faster than `std::HashSet` |
-| :------------------ | :--------------- | :------------------------------- |
-| `std::HashSet`      | 26.1372 ms       | 1                                |
-| `std::BTreeSet`     | 19.9894 ms       | 1.3076                           |
-| `ahash::AHashSet`   | 4.7835 ms        | 5.4640                           |
-| `fxhash::FxHashSet` | 3.4792 ms        | 7.5124                           |
+| Set                 | Average Time     | Compared to `std::HashSet` |
+| :------------------ | :--------------- | :------------------------- |
+| `std::HashSet`      | 26.1372 ms       | 1                          |
+| `std::BTreeSet`     | 19.9894 ms       | 1.3076                     |
+| `ahash::AHashSet`   | 4.7835 ms        | 5.4640                     |
+| `fxhash::FxHashSet` | 3.4792 ms        | 7.5124                     |
 
 As you can see FxHashSet was 7.5 times faster than the standard HashSet implementation. Discourse online suggests that FxHash implements the fastest algorithm when it comes to small key sizes. This explains the massive performance increase we see here!
 

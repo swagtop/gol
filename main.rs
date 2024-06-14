@@ -1,25 +1,30 @@
-use nannou::prelude::{ App, Update, Frame, MouseButton::Left, Vec2 };
-use nannou::winit::event::WindowEvent as WinitEvent;
-use nannou::winit::event::ElementState::{ Pressed, Released};
-use nannou::prelude::MouseScrollDelta;
-use nannou::color::{ BLACK, WHITE };
+use nannou::color::{BLACK, WHITE};
 use nannou::event::Key::*;
-use nannou::window;
+use nannou::prelude::MouseScrollDelta;
 use nannou::prelude::Rect;
+use nannou::prelude::{App, Frame, MouseButton::Left, Update, Vec2};
 use nannou::rand::random_range;
+use nannou::window;
+use nannou::winit::event::ElementState::{Pressed, Released};
+use nannou::winit::event::WindowEvent as WinitEvent;
 // use std::collections::HashSet;
 // use std::collections::BTreeSet as HashSet;
 // use ahash::AHashSet as HashSet;
 use fxhash::FxHashSet as HashSet;
-use std::time::{ Duration, Instant };
 use std::env;
+use std::time::{Duration, Instant};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    
+
     // Run benchmark if arg is given
-    if args.len() != 1 { if &args[1] == "benchmark" { run_benchmark(); return; } }
-    
+    if args.len() != 1 {
+        if &args[1] == "benchmark" {
+            run_benchmark();
+            return;
+        }
+    }
+
     nannou::app(model).update(update).run();
 }
 
@@ -36,7 +41,7 @@ fn state() -> State {
     let res_list: Vec<(i32, i32)> = Vec::new();
 
     State {
-        cells, 
+        cells,
         kill_list,
         res_list,
     }
@@ -80,7 +85,7 @@ fn model(app: &App) -> Model {
         state.cells.insert(cell);
     }
 
-    Model { 
+    Model {
         _window,
         state,
         view,
@@ -90,7 +95,7 @@ fn model(app: &App) -> Model {
         show_stats,
         generation,
         dark_mode,
-        last_update: Instant::now() 
+        last_update: Instant::now(),
     }
 }
 
@@ -102,11 +107,15 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
                 match input.virtual_keycode {
                     Some(Minus) | Some(NumpadSubtract) => {
                         let new_scale = model.scale - 2.0;
-                        if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
-                    },
+                        if new_scale > 1.0 && new_scale < 30.0 {
+                            model.scale = new_scale
+                        }
+                    }
                     Some(Equals) | Some(Plus) | Some(NumpadAdd) => {
                         let new_scale = model.scale + 2.0;
-                        if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
+                        if new_scale > 1.0 && new_scale < 30.0 {
+                            model.scale = new_scale
+                        }
                     }
                     Some(H) => {
                         model.last_view = model.view.clone();
@@ -114,9 +123,11 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
                     }
                     Some(J) => {
                         model.last_view = model.view.clone();
-                        let cells: Vec<(i32, i32)> = model.state.cells.clone().into_iter().collect();
+                        let cells: Vec<(i32, i32)> =
+                            model.state.cells.clone().into_iter().collect();
                         let random_cell = cells[random_range(0, cells.len())];
-                        (model.view.x, model.view.y) = (-random_cell.0 as f32, -random_cell.1 as f32);
+                        (model.view.x, model.view.y) =
+                            (-random_cell.0 as f32, -random_cell.1 as f32);
                     }
                     Some(Z) => {
                         let current_view = model.view.clone();
@@ -133,11 +144,24 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
                 }
             }
         }
-        WinitEvent::MouseInput { state: Pressed, button: Left, .. } => model.clicked = true,
-        WinitEvent::MouseInput { state: Released, button: Left, .. } => model.clicked = false,
-        WinitEvent::MouseWheel { delta: MouseScrollDelta::LineDelta(_, y), .. } => {
+        WinitEvent::MouseInput {
+            state: Pressed,
+            button: Left,
+            ..
+        } => model.clicked = true,
+        WinitEvent::MouseInput {
+            state: Released,
+            button: Left,
+            ..
+        } => model.clicked = false,
+        WinitEvent::MouseWheel {
+            delta: MouseScrollDelta::LineDelta(_, y),
+            ..
+        } => {
             let new_scale = model.scale + y;
-            if new_scale > 1.0 && new_scale < 30.0 { model.scale = new_scale }
+            if new_scale > 1.0 && new_scale < 30.0 {
+                model.scale = new_scale
+            }
         }
         _ => (),
     }
@@ -147,9 +171,9 @@ fn update(app: &App, model: &mut Model, _update: Update) {
     let clicked = model.clicked;
 
     // Move view when clicked
-    if clicked { 
-        model.view.x -= app.mouse.x/100.0/model.scale;
-        model.view.y -= app.mouse.y/100.0/model.scale;
+    if clicked {
+        model.view.x -= app.mouse.x / 100.0 / model.scale;
+        model.view.y -= app.mouse.y / 100.0 / model.scale;
     }
 
     // Update cells if enough time has passed
@@ -166,12 +190,18 @@ fn view(app: &App, model: &Model, frame: Frame) {
     let cell_color;
     let background_color;
 
-    if model.dark_mode { cell_color = WHITE; background_color = BLACK; }
-    else { cell_color = BLACK; background_color = WHITE; }
+    if model.dark_mode {
+        cell_color = WHITE;
+        background_color = BLACK;
+    } else {
+        cell_color = BLACK;
+        background_color = WHITE;
+    }
 
     draw.background().color(background_color);
     for cell in model.state.cells.iter() {
-        draw.scale(model.scale).rect()
+        draw.scale(model.scale)
+            .rect()
             .w_h(1.0, 1.0)
             .x((cell.0 as f32) + model.view.x)
             .y((cell.1 as f32) + model.view.y)
@@ -181,7 +211,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
     if model.show_stats {
         let corner = Rect::from_w_h(0.0, 0.0).top_left_of(frame.rect());
         let coordinates = format!("{}, {}", (-model.view.x) as i32, (-model.view.y) as i32);
-        
+
         draw.text("Coordinates:")
             .x(corner.x() + 100.0)
             .y(corner.y() - 2.5)
@@ -192,14 +222,13 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .y(corner.y() - 12.5)
             .color(cell_color)
             .left_justify();
-        
+
         draw.text("Generation:")
             .x(corner.x() + 100.0)
             .y(corner.y() - 22.5)
             .color(cell_color)
             .left_justify();
-        draw.text(&model.generation
-            .to_string())
+        draw.text(&model.generation.to_string())
             .x(corner.x() + 100.0)
             .y(corner.y() - 32.5)
             .color(cell_color)
@@ -210,8 +239,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .y(corner.y() - 42.5)
             .color(cell_color)
             .left_justify();
-        draw.text(&model.state.cells.len()
-            .to_string())
+        draw.text(&model.state.cells.len().to_string())
             .x(corner.x() + 100.0)
             .y(corner.y() - 52.5)
             .color(cell_color)
@@ -223,58 +251,60 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
 fn update_cells(state: &mut State) {
     let cells = &mut state.cells;
-    
+
     let kill_list = &mut state.kill_list;
     let res_list = &mut state.res_list;
 
-    let neighbor_array: &mut [(i32, i32); 8] = &mut [(0, 0); 8];
-    let neighbor_neighbor_array: &mut [(i32, i32); 8] = &mut [(0, 0); 8];
-
     for cell in cells.iter() {
         // Mark cell for death by neighbor amount
-        dump_neighbors(&cell, neighbor_array);
-        let neighbor_count: u8 = count_living_neighbors(&neighbor_array, &cells);
+        let neighbors: [(i32, i32); 8] = get_neighbors(&cell);
+        let neighbor_count: u8 = count_living_neighbors(&neighbors, &cells);
         if neighbor_count < 2 || neighbor_count > 3 {
             kill_list.push(*cell);
         }
-        
-        // Check which neighbors are dead
-        for neighbor in neighbor_array.iter() {
-            if cells.contains(&neighbor) { continue };
-            
-            // If neighbor is dead, check if it should be resurrected
-            dump_neighbors(&neighbor, neighbor_neighbor_array);
-            let neighbor_count: u8 = count_living_neighbors(&neighbor_neighbor_array, &cells);
+
+        // Iterate through dead neighbors, mark ones deserving for life
+        for neighbor in neighbors.iter().filter(|&&neighbor| !cells.contains(&neighbor)) {
+            let neighbor_neighbors: [(i32, i32); 8] = get_neighbors(&neighbor);
+            let neighbor_count: u8 = count_living_neighbors(&neighbor_neighbors, &cells);
             if neighbor_count == 3 {
                 res_list.push(*neighbor);
             }
         }
     }
 
-    for cell in kill_list.drain(0..) { cells.remove(&cell); }  
-    for resurrected_cell in res_list.drain(0..) { cells.insert(resurrected_cell); }
+    for cell in kill_list.drain(0..) {
+        cells.remove(&cell);
+    }
+    for resurrected_cell in res_list.drain(0..) {
+        cells.insert(resurrected_cell);
+    }
 }
 
-// Dumps the coordinates of the neighbors of the cells coordinates given
-fn dump_neighbors(coordinates: &(i32, i32), array: &mut [(i32, i32); 8]) {
+// Returns arrays of the coordinates of the neighbors of the cells coordinates given
+fn get_neighbors(coordinates: &(i32, i32)) -> [(i32, i32); 8] {
     let (x, y) = *coordinates;
     let (x_left, x_right) = (x.overflowing_sub(1).0, x.overflowing_add(1).0);
     let (y_up, y_down) = (y.overflowing_sub(1).0, y.overflowing_add(1).0);
 
-    array[0] = (x_left,  y_up  ); 
-    array[1] = (x,       y_up  );
-    array[2] = (x_right, y_up  );
-    array[3] = (x_left,  y     );
-    array[4] = (x_right, y     );
-    array[5] = (x_left,  y_down);
-    array[6] = (x,       y_down);
-    array[7] = (x_right, y_down);
+    [
+        (x_left, y_up),
+        (x, y_up),
+        (x_right, y_up),
+        (x_left, y),
+        (x_right, y),
+        (x_left, y_down),
+        (x, y_down),
+        (x_right, y_down),
+    ]
 }
 
 fn count_living_neighbors(list: &[(i32, i32); 8], cells: &HashSet<(i32, i32)>) -> u8 {
     let mut count: u8 = 0;
     for neighbor in list {
-        if cells.contains(&neighbor) { count += 1 };
+        if cells.contains(&neighbor) {
+            count += 1
+        };
     }
     count
 }
@@ -285,7 +315,10 @@ fn run_benchmark() {
     let updates_per_run = 1000;
     let cell_amount = 1000;
     let runs = 10000;
-    println!("Running {} updates on {} cells, {} times", updates_per_run, cell_amount, runs);
+    println!(
+        "Running {} updates on {} cells, {} times",
+        updates_per_run, cell_amount, runs
+    );
     for i in 0..runs {
         let mut state = state();
 
@@ -306,17 +339,21 @@ fn run_benchmark() {
     }
 
     println!("");
-    println!("Average runtime over {} runs: {} ms", time_vec.len(), time_vec.iter().sum::<f32>() / time_vec.len() as f32);
+    println!(
+        "Average runtime over {} runs: {} ms",
+        time_vec.len(),
+        time_vec.iter().sum::<f32>() / time_vec.len() as f32
+    );
 }
 
 //
 //
-//                     # #                     # # 
-//                     # #                     # # 
-//                     # #                     # # 
-//                     # #                     # # 
-//                     # # # #             # # # # 
-//                     # # # #             # # # # 
+//                     # #                     # #
+//                     # #                     # #
+//                     # #                     # #
+//                     # #                     # #
+//                     # # # #             # # # #
+//                     # # # #             # # # #
 //
 //
 //     # # # # # #         # # # #     # # # #         # # # # # #
