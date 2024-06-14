@@ -6,7 +6,7 @@
 </div>
 <br>
 
-Very simple Conway's Game of Life implementation in Rust, using the [nannou framework](__https://github.com/nannou-org/nannou__) for rendering. This project was created as my first Rust project, to get a feel for the language.
+Very simple Conway's Game of Life implementation in Rust, using the [nannou framework](https://github.com/nannou-org/nannou) for rendering. This project was created as my first Rust project, to get a feel for the language.
 
 The universe of the game contains $2^{32} \times 2^{32}$ unique cells. It is donut shaped, such that structures - like gliders - emerge from the opposite side of the universe when reaching the end.
 
