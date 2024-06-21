@@ -7,14 +7,14 @@ use nannou::rand::random_range;
 use nannou::window;
 use nannou::winit::event::ElementState::{Pressed, Released};
 use nannou::winit::event::WindowEvent as WinitEvent;
-// use std::collections::HashSet;
+use std::collections::HashSet;
 // use std::collections::BTreeSet as HashSet;
 // use ahash::AHashSet as HashSet;
-use fxhash::FxHashSet as HashSet;
+// use fxhash::FxHashSet as HashSet;
 use std::env;
 use std::time::{Duration, Instant};
 use std::thread;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex};
 use threadpool::ThreadPool;
 
 fn main() {
@@ -32,29 +32,17 @@ fn main() {
 }
 
 struct State {
-    cells: Arc<RwLock<HashSet<(i32, i32)>>>,
-    thread_amount: usize,
-    kill_lists: Arc<Vec<Mutex<Vec<(i32, i32)>>>>,
-    res_lists: Arc<Vec<Mutex<Vec<(i32, i32)>>>>,
+    cells: HashSet<(i32, i32)>,
+    kill_list: Vec<(i32, i32)>,
+    res_list: Vec<(i32, i32)>,
     workers: ThreadPool,
 }
 
 fn state() -> State {
-    let cells = Arc::new(RwLock::new(HashSet::default()));
+    let cells: HashSet<(i32, i32)> = HashSet::default();
 
-    let thread_amount = thread::available_parallelism().unwrap().get();
-    
-    let kill_lists = Arc::new(
-    (0..thread_amount)
-        .map(|_| Mutex::new(Vec::new()))
-        .collect::<Vec<_>>(),
-    );
-
-    let res_lists = Arc::new(
-        (0..thread_amount)
-            .map(|_| Mutex::new(Vec::new()))
-            .collect::<Vec<_>>(),
-    );
+    let kill_list: Vec<(i32, i32)> = Vec::new();
+    let res_list: Vec<(i32, i32)> = Vec::new();
     
     let workers = ThreadPool::new(
         thread::available_parallelism().unwrap().get()
@@ -62,9 +50,8 @@ fn state() -> State {
 
     State {
         cells,
-        thread_amount,
-        kill_lists,
-        res_lists,
+        kill_list,
+        res_list,
         workers,
     }
 }
@@ -105,7 +92,7 @@ fn model(app: &App) -> Model {
     //let cell_amount = 5000;
     for _ in 0..cell_amount {
         let cell = (random_range(-100, 100), random_range(-100, 100));
-        state.cells.write().unwrap().insert(cell);
+        state.cells.insert(cell);
     }
 
     Model {
@@ -147,7 +134,7 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
                     Some(J) => {
                         model.last_view = model.view.clone();
                         let cells: Vec<(i32, i32)> =
-                            model.state.cells.write().unwrap().clone().into_iter().collect();
+                            model.state.cells.clone().into_iter().collect();
                         let random_cell = cells[random_range(0, cells.len())];
                         (model.view.x, model.view.y) =
                             (-random_cell.0 as f32, -random_cell.1 as f32);
@@ -222,7 +209,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
     }
 
     draw.background().color(background_color);
-    for cell in model.state.cells.read().unwrap().iter() {
+    for cell in model.state.cells.iter() {
         draw.scale(model.scale)
             .rect()
             .w_h(1.0, 1.0)
@@ -262,7 +249,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .y(corner.y() - 42.5)
             .color(cell_color)
             .left_justify();
-        draw.text(&model.state.cells.read().unwrap().len().to_string())
+        draw.text(&model.state.cells.len().to_string())
             .x(corner.x() + 100.0)
             .y(corner.y() - 52.5)
             .color(cell_color)
@@ -273,97 +260,123 @@ fn view(app: &App, model: &Model, frame: Frame) {
 }
 
 impl State {
-    fn par_tick(&mut self) {
-        let cells_vec = Arc::new(RwLock::new(self.cells.read().unwrap().iter().copied().collect::<Vec<_>>()));
-        let cell_amount = cells_vec.read().unwrap().len();
-        let thread_distribution = Arc::new((cell_amount / self.thread_amount) as usize);
+    fn tick(&mut self) {
+        for cell in self.cells.iter() {
+            // Mark cell for death by neighbor amount.
+            let neighbors: [(i32, i32); 8] = get_neighbors(&cell);
+            let neighbor_count = count_living_neighbors(&neighbors, &self.cells);
+            if neighbor_count < 2 || neighbor_count > 3 {
+                self.kill_list.push(*cell);
+            }
 
-        // Worker threads
-        for thread_number in 0..self.thread_amount - 1 {
+            // Iterate through dead neighbors, mark ones deserving for life.
+            for neighbor in neighbors
+                .iter()
+                .filter(|&&neighbor| !self.cells.contains(&neighbor))
+            {
+                let neighbor_neighbors: [(i32, i32); 8] = get_neighbors(&neighbor);
+                let neighbor_count = count_living_neighbors(&neighbor_neighbors, &self.cells);
+                if neighbor_count == 3 {
+                    self.res_list.push(*neighbor);
+                }
+            }
+        }
+
+        for cell in self.kill_list.drain(0..) {
+            self.cells.remove(&cell);
+        }
+        for resurrected_cell in self.res_list.drain(0..) {
+            self.cells.insert(resurrected_cell);
+        }
+    }
+
+    fn par_tick(&mut self) {
+        let cells_vec: Vec<_> = self.cells.iter().copied().collect();
+        let cell_amount = cells_vec.len();
+        let thread_amount = thread::available_parallelism().unwrap().get();
+        let thread_distribution = Arc::new((cell_amount / thread_amount) as usize);
+
+        let cells = Arc::new(cells_vec);
+        let cells_set = Arc::new(self.cells.clone());
+        //let shared_kill_list = Arc::new(Mutex::<Vec<Vec<(i32, i32)>>>::new(Vec::default()));
+        //let shared_res_list = Arc::new(Mutex::<Vec<Vec<(i32, i32)>>>::new(Vec::default()));
+
+        //let mut shared_kill_list = Arc::new(vec![Vec::default(); thread_amount]);
+        //let mut shared_res_list = Arc::new(vec![Vec::default(); thread_amount]);
+        //let mut handles = Vec::default();
+        //println!("Tick starting, with {} cells", cell_amount);
+
+        let shared_kill_list = Arc::new(
+            (0..thread_amount)
+                .map(|_| Mutex::new(Vec::new()))
+                .collect::<Vec<_>>(),
+        );
+        let shared_res_list = Arc::new(
+            (0..thread_amount)
+                .map(|_| Mutex::new(Vec::new()))
+                .collect::<Vec<_>>(),
+        );
+
+        for i in 0..thread_amount {
             //println!("{}", self.workers.active_count());
-            let thread_cells = Arc::clone(&cells_vec);
-            let thread_cells_set = Arc::clone(&self.cells);
-            let thread_kill_list_list = Arc::clone(&self.kill_lists);
-            let thread_res_list_list = Arc::clone(&self.res_lists);
+            let thread_number = Arc::new(i);
+            let thread_cells = Arc::clone(&cells);
+            let thread_cells_set = Arc::clone(&cells_set);
+            let thread_kill_list_list = Arc::clone(&shared_kill_list);
+            let thread_res_list_list = Arc::clone(&shared_res_list);
             let this_thread_distribution = Arc::clone(&thread_distribution);
 
             self.workers.execute(move || {
-                let slice_start = thread_number * *this_thread_distribution;
-                let slice = &thread_cells.read().unwrap()[slice_start .. (slice_start + *this_thread_distribution)];
-                let thread_cells_set = thread_cells_set.read().unwrap();
-                let mut kill_list = thread_kill_list_list[thread_number].lock().unwrap();
-                let mut res_list = thread_res_list_list[thread_number].lock().unwrap();
-                
+                let slice_size = *thread_number * *this_thread_distribution;
+                let slice = &thread_cells[slice_size .. (slice_size + *this_thread_distribution)];
+                //println!("Thread {} starting, with {} cells", *thread_number, slice.len());
                 for cell in slice {
                     let neighbors: [(i32, i32); 8] = get_neighbors(&cell);
                     let neighbor_count = count_living_neighbors(&neighbors, &thread_cells_set);
                     if neighbor_count < 2 || neighbor_count > 3 {
-                        kill_list.push(*cell);
+                        //thread_kill_list.push(*cell);
+                        thread_kill_list_list[*thread_number].lock().unwrap().push(*cell);
                     }
 
                     // Iterate through dead neighbors, mark ones deserving for life.
                     for neighbor in neighbors
                         .iter()
-                        .filter(|&&neighbor| !thread_cells_set.contains(&neighbor))
+                        .filter(|&&neighbor| !thread_cells.contains(&neighbor))
                     {
                         let neighbor_neighbors: [(i32, i32); 8] = get_neighbors(&neighbor);
                         let neighbor_count = count_living_neighbors(&neighbor_neighbors, &thread_cells_set);
                         if neighbor_count == 3 {
-                            res_list.push(*neighbor);
+                            //thread_res_list.push(*neighbor);
+                            thread_res_list_list[*thread_number].lock().unwrap().push(*neighbor);
                         }
                     }
                 }
+                //thread_kill_list_list[*thread_number].push(thread_kill_list);
+                //thread_res_list_list[*thread_number].push(thread_kill_list);
+                //thread_kill_list_list.lock().unwrap().push(thread_kill_list);
+                //thread_res_list_list.lock().unwrap().push(thread_res_list);
+                //println!("Thread {} finished", *thread_number);
             });
-        }
-
-        // Main thread
-        {
-            let thread_cells = Arc::clone(&cells_vec);
-            let thread_cells_set = Arc::clone(&self.cells);
-            let thread_kill_list_list = Arc::clone(&self.kill_lists);
-            let thread_res_list_list = Arc::clone(&self.res_lists);
-            let this_thread_distribution = Arc::clone(&thread_distribution);
-            
-            let slice_start = (self.thread_amount - 1) * *this_thread_distribution;
-            let slice = &thread_cells.read().unwrap()[slice_start .. thread_cells.read().unwrap().len()];
-            let thread_cells_set = thread_cells_set.read().unwrap();
-            let mut kill_list = thread_kill_list_list[self.thread_amount - 1].lock().unwrap();
-            let mut res_list = thread_res_list_list[self.thread_amount - 1].lock().unwrap();
-            
-            for cell in slice {
-                let neighbors: [(i32, i32); 8] = get_neighbors(&cell);
-                let neighbor_count = count_living_neighbors(&neighbors, &thread_cells_set);
-                if neighbor_count < 2 || neighbor_count > 3 {
-                    kill_list.push(*cell);
-                }
-
-                // Iterate through dead neighbors, mark ones deserving for life.
-                for neighbor in neighbors
-                    .iter()
-                    .filter(|&&neighbor| !thread_cells_set.contains(&neighbor))
-                {
-                    let neighbor_neighbors: [(i32, i32); 8] = get_neighbors(&neighbor);
-                    let neighbor_count = count_living_neighbors(&neighbor_neighbors, &thread_cells_set);
-                    if neighbor_count == 3 {
-                        res_list.push(*neighbor);
-                    }
-                }
-            }
+            //handles.push(handle);
         }
             
+        /*for handle in handles {
+            handle.join().unwrap();
+        }*/
+        //println!("Tick finished");
         self.workers.join();
 
-        let mut cells = self.cells.write().unwrap();
-        for kill_list in self.kill_lists.iter() {
-            let mut kill_list = kill_list.lock().unwrap();
-            for cell in kill_list.drain(0..) {
-                cells.remove(&cell);
+        for kill_list in shared_kill_list.iter() {
+            let kill_list = kill_list.lock().unwrap();
+            for cell in kill_list.iter() {
+                self.cells.remove(&cell);
             }
         }
-        for res_list in self.res_lists.iter() {
-            let mut res_list = res_list.lock().unwrap();
-            for resurrected_cell in res_list.drain(0..) {
-                cells.insert(resurrected_cell);
+
+        for res_list in shared_res_list.iter() {
+            let res_list = res_list.lock().unwrap();
+            for resurrected_cell in res_list.iter() {
+                self.cells.insert(*resurrected_cell);
             }
         }
     }
@@ -417,13 +430,13 @@ fn run_benchmark() {
 
         for _ in 0..cell_amount {
             let cell = (random_range(-100, 100), random_range(-100, 100));
-            state.cells.write().unwrap().insert(cell);
+            state.cells.insert(cell);
         }
 
         let begin_time = Instant::now();
 
         for _ in 0..updates_per_run {
-            state.par_tick();
+            state.tick();
         }
 
         time_vec.push((Instant::now() - begin_time).subsec_millis() as f32);

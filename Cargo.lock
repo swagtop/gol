@@ -46,7 +46,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e89da841a80418a9b391ebaea17f5c112ffaaa96f621d2c285b5174da76b9011"
 dependencies = [
  "cfg-if 1.0.0",
- "getrandom 0.2.15",
  "once_cell",
  "version_check",
  "zerocopy",
@@ -702,9 +701,9 @@ dependencies = [
 name = "gol"
 version = "0.1.0"
 dependencies = [
- "ahash",
  "fxhash",
  "nannou",
+ "threadpool",
 ]
 
 [[package]]
@@ -2015,6 +2014,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.66",
+]
+
+[[package]]
+name = "threadpool"
+version = "1.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d050e60b33d41c19108b32cea32164033a9013fe3b46cbd4457559bfbf77afaa"
+dependencies = [
+ "num_cpus",
 ]
 
 [[package]]

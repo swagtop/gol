@@ -5,7 +5,7 @@
 
 </div>
 
-Very simple Conway's Game of Life implementation in Rust, using the [nannou framework](https://github.com/nannou-org/nannou) for rendering. This project was created as my first Rust project, for messing around in Rust and getting a feel for the language.
+Very simple multithreaded Conway's Game of Life implementation in Rust, using the [nannou framework](https://github.com/nannou-org/nannou) for rendering. This project was created as my first Rust project, for messing around in Rust and getting a feel for the language.
 
 The universe of the game contains $2^{32} \times 2^{32}$ unique cells. It is donut shaped, such that structures - like gliders - emerge from the opposite side of the universe when reaching the end. The game keeps track of which cells are alive by storing the coordinates of live cells in a hash set. When cells are given life or killed, their coordinates are simply inserted into or removed from the hash set.
 
@@ -29,16 +29,16 @@ Here are some ways to interact with the game:
 
 A lot of time spent making this project, was toying around with optimizations. Does the program run faster or slower if I create a new vector here, or re-use the same vector each time? One of the things I tried out, was a couple of different hash set implementations, and a non-hash one.
 
-Here we see the average time to complete 1000 updates, on 1000 randomly placed cells, over 10,000 runs:
+Here we see the average time to complete 500 updates, on 3750 randomly placed cells, over 100 runs:
 
 | Set                 | Average Time | Compared to `std::HashSet` |
 | :------------------ | :----------- | :------------------------- |
-| `std::HashSet`      | 26.1372 ms   | 1                          |
-| `std::BTreeSet`     | 19.9894 ms   | 1.3076                     |
-| `ahash::AHashSet`   | 4.7835 ms    | 5.4640                     |
-| `fxhash::FxHashSet` | 3.4792 ms    | 7.5124                     |
+| `std::BTreeSet`     | 347.71 ms    | 0.623                      |
+| `std::HashSet`      | 216.51 ms    | 1                          |
+| `ahash::AHashSet`   | 105.20 ms    | 2.058                      |
+| `fxhash::FxHashSet` | 89.040 ms    | 2.431                      |
 
-As you can see FxHashSet was 7.5 times faster than the standard HashSet implementation. Many forum threads say that xxHash is even faster. I tried it, but it ran hundreds of times slower than even the standard HashSet, so we will be sticking to FxHash.
+As you can see FxHashSet was almost 2.5 times faster than the standard HashSet implementation. Many forum threads say that xxHash is even faster. I tried it, but it ran hundreds of times slower than even the standard HashSet, so we will be sticking to FxHash.
 
 ## Todo
 
