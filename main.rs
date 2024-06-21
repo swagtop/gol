@@ -532,7 +532,7 @@ fn run_benchmark() {
             state.tick();
         }
 
-        time_vec.push((Instant::now() - begin_time).subsec_millis() as f32);
+        time_vec.push((Instant::now().duration_since(begin_time)).as_millis() as f32);
 
         eprint!("\r{} out of {}", i, runs);
     }
@@ -540,7 +540,7 @@ fn run_benchmark() {
     let runtime = time_vec.iter().sum::<f32>() / time_vec.len() as f32;
     println!(
         "\nTotal runtime: {} s",
-        (Instant::now() - start_bench_time).as_secs()
+        (Instant::now().duration_since(start_bench_time)).as_millis() as f32 / 1000.0
     );
     println!(
         "Average runtime over {} runs: {} ms",
@@ -551,6 +551,10 @@ fn run_benchmark() {
         "Average tick runtime: {} ms",
         (runtime / updates_per_run as f32)
     );
+    match thread::available_parallelism() {
+        Ok(i) => println!("Used {} threads", i),
+        Err(_) => println!("No multithreading"),
+    }
 }
 
 //
