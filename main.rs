@@ -515,7 +515,7 @@ fn run_benchmark() {
         updates_per_run, cell_amount, runs
     );
     
-    eprint!("0 out of {}", runs);
+    eprint!("0 out of {}\r", runs);
     for i in 1..=runs {
         let mut state = state();
 
@@ -534,12 +534,12 @@ fn run_benchmark() {
 
         time_vec.push((Instant::now().duration_since(begin_time)).as_millis() as f32);
 
-        eprint!("\r{} out of {}", i, runs);
+        eprint!("{} out of {}\r", i, runs);
     }
     
     let runtime = time_vec.iter().sum::<f32>() / time_vec.len() as f32;
     println!(
-        "\nTotal runtime: {} s",
+        "Total runtime: {} s",
         (Instant::now().duration_since(start_bench_time)).as_millis() as f32 / 1000.0
     );
     println!(
@@ -552,9 +552,10 @@ fn run_benchmark() {
         (runtime / updates_per_run as f32)
     );
     match thread::available_parallelism() {
-        Ok(i) => println!("Used {} threads", i),
-        Err(_) => println!("No multithreading"),
+        Ok(i) => println!("Used {} threads\n", i),
+        Err(_) => println!("No multithreading\n"),
     }
+    eprint!("{}", 8u8 as char);
 }
 
 //
