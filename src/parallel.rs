@@ -10,6 +10,7 @@ pub struct ParallelState {
     kill_lists: Arc<Vec<Mutex<Vec<(i32, i32)>>>>,
     res_lists: Arc<Vec<Mutex<Vec<(i32, i32)>>>>,
     workers: ThreadPool,
+    generation: usize,
 }
 
 pub fn parallel_state() -> ParallelState {
@@ -33,12 +34,15 @@ pub fn parallel_state() -> ParallelState {
         thread::available_parallelism().unwrap().get() - 1
     );
 
+    let generation: usize = 0;
+
     ParallelState {
         cells,
         thread_amount,
         kill_lists,
         res_lists,
         workers,
+        generation,
     }
 }
 
@@ -125,6 +129,9 @@ impl State for ParallelState {
         self.workers.join();
 
         let mut cells = self.cells.write().unwrap();
+        if !cells.is_empty() {
+            self.generation += 1;
+        }
         for kill_list in self.kill_lists.iter() {
             let mut kill_list = kill_list.lock().unwrap();
             for cell in kill_list.drain(0..) {
@@ -136,7 +143,7 @@ impl State for ParallelState {
             for resurrected_cell in res_list.drain(0..) {
                 cells.insert(resurrected_cell);
             }
-        }
+        }    
     }
 
     fn insert_cells(&mut self, mut collection: Vec<(i32, i32)>) {
@@ -156,5 +163,13 @@ impl State for ParallelState {
         }
         
         collection
+    }
+
+    fn count_cells(&self) -> usize {
+        self.cells.read().unwrap().len()
+    }
+
+    fn generation(&self) -> usize {
+        self.generation
     }
 }

@@ -21,9 +21,13 @@ Here are some ways to interact with the game:
 | `+` `-` (or scrollwheel) | Zooms in or out              |
 | `tab`                    | Toggles stats                |
 | `c`                      | Toggle dark mode             |
+| `p`                      | Pause or unpause             |
+| `t`                      | Advance cells by one tick    |
 | `h`                      | Jump back home, to (0, 0)    |
 | `j`                      | Jump to random live cell     |
 | `z`                      | Undo last jump               |
+
+You can also drag and drop files into the game window (unless you are on Wayland), and it will load a cell configuration into the universe, based on the characters in the file. So long as you only use ASCII characters, the program should be able to work out which characters represent cells, and which represent empty space.
 
 ## Insights
 

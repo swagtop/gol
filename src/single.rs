@@ -5,6 +5,7 @@ pub struct SingleState {
     cells: HashSet<(i32, i32)>,
     kill_list: Vec<(i32, i32)>,
     res_list: Vec<(i32, i32)>,
+    generation: usize,
 }
 
 pub fn single_state() -> SingleState {
@@ -13,15 +14,22 @@ pub fn single_state() -> SingleState {
     let kill_list: Vec<(i32, i32)> = Vec::new();
     let res_list: Vec<(i32, i32)> = Vec::new();
 
+    let generation: usize = 0;
+
     SingleState {
         cells,
         kill_list,
         res_list,
+        generation,
     }
 }
 
 impl State for SingleState {
     fn tick(&mut self) {
+        if !self.cells.is_empty() {
+            self.generation += 1;
+        }
+
         for cell in self.cells.iter() {
             // Mark cell for death by neighbor amount.
             let neighbors: [(i32, i32); 8] = get_neighbors(&cell);
@@ -65,5 +73,13 @@ impl State for SingleState {
         }
 
         collection
+    }
+
+    fn count_cells(&self) -> usize {
+        self.cells.len()
+    }
+
+    fn generation(&self) -> usize {
+        self.generation
     }
 }

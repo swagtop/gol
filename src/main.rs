@@ -7,15 +7,17 @@ mod parallel;
 mod single;
 mod state;
 mod gui;
+mod file;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
     // Run benchmark if arg is given.
     if args.len() != 1 {
-        if &args[1] == "benchmark" {
-            run_benchmark();
-            return;
+        match args[1].as_str() {
+            "benchmark" => { run_benchmark(); return; }
+            "file" => { gui::run_gui(); return; },
+            _ => ()
         }
     }
 
