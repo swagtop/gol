@@ -12,7 +12,7 @@ threadpool = "1.8.1"
 
 [[bin]]
 name = "gol"
-path = "main.rs"
+path = "src/main.rs"
 
 [profile.release]
 debug = true
