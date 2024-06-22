@@ -2,7 +2,6 @@ use std::thread;
 use std::sync::{Arc, Mutex, RwLock};
 use threadpool::ThreadPool;
 use fxhash::FxHashSet as HashSet;
-
 use crate::state::*;
 
 pub struct ParallelState {

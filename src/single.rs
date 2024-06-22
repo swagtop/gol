@@ -1,5 +1,4 @@
 use fxhash::FxHashSet as HashSet;
-
 use crate::state::*;
 
 pub struct SingleState {
