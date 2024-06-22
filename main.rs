@@ -69,7 +69,7 @@ fn parallel_state() -> ParallelState {
     );
     
     let workers = ThreadPool::new(
-        thread::available_parallelism().unwrap().get()
+        thread::available_parallelism().unwrap().get() - 1
     );
 
     ParallelState {
@@ -509,13 +509,19 @@ fn run_benchmark() {
 
     let updates_per_run = 500;
     let cell_amount = 3750;
-    let runs = 100;
-    println!(
-        "Running {} updates on {} cells, {} times",
+    let runs = 110;
+
+    let label_string = format!(
+        "   Running {} updates on {} cells, {} times ↴   ",
         updates_per_run, cell_amount, runs
     );
+    let line_len = label_string.chars().count();
+    println!("{}", "-".repeat(line_len));
+    println!("{}", label_string);
+    println!("{}", "-".repeat(line_len));
     
-    eprint!("0 out of {}\r", runs);
+    let progress_string = format!("0 out of {}", runs);
+    eprint!("{: ^width$}\r", progress_string, width = line_len);
     for i in 1..=runs {
         let mut state = state();
 
@@ -534,28 +540,32 @@ fn run_benchmark() {
 
         time_vec.push((Instant::now().duration_since(begin_time)).as_millis() as f32);
 
-        eprint!("{} out of {}\r", i, runs);
-    }
+    //eprint!("{} out of {}\r", i, runs);
+    let progress_string = format!("{} out of {}", i, runs);
+    eprint!("{:^width$}\r", progress_string, width = line_len);
+}
     
     let runtime = time_vec.iter().sum::<f32>() / time_vec.len() as f32;
     println!(
-        "Total runtime: {} s",
-        (Instant::now().duration_since(start_bench_time)).as_millis() as f32 / 1000.0
+        "Total runtime: {:>width$}  s",
+        (Instant::now().duration_since(start_bench_time)).as_millis() as f32 / 1000.0,
+        width = line_len - 18
     );
     println!(
-        "Average runtime over {} runs: {} ms",
-        time_vec.len(),
-        runtime
+        "Average run duration: {:>width$} ms",
+        runtime,
+        width = line_len - 25
     );
     println!(
-        "Average tick runtime: {} ms",
-        (runtime / updates_per_run as f32)
+        "Average tick duration: {:>width$} ms",
+        (runtime / updates_per_run as f32),
+        width = line_len - 26
     );
     match thread::available_parallelism() {
-        Ok(i) => println!("Used {} threads\n", i),
-        Err(_) => println!("No multithreading\n"),
+        Ok(i) => println!("Thread count: {:>width$}   ", i, width = line_len - 17),
+        Err(_) => println!("No multithreading"),
     }
-    eprint!("{}", 8u8 as char);
+    //eprintln!("{}", "-".repeat(label_string.chars().count()));
 }
 
 //
