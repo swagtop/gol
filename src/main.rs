@@ -1,7 +1,6 @@
 use std::env;
-use std::time::Instant;
 use std::thread;
-use crate::state::State;
+use std::time::Instant;
 use nannou::rand::random_range;
 
 mod parallel;
@@ -23,13 +22,6 @@ fn main() {
     gui::run_gui();
 }
 
-fn state() -> Box<dyn State> {
-    match thread::available_parallelism() {
-        Ok(_) => Box::new(parallel::parallel_state()),
-        Err(_) => Box::new(single::single_state()),
-    }
-}
-
 fn run_benchmark() {
     let start_bench_time = Instant::now();
 
@@ -37,7 +29,7 @@ fn run_benchmark() {
 
     let updates_per_run = 500;
     let cell_amount = 3750;
-    let runs = 110;
+    let runs = 100;
 
     let label_string = format!(
         "   Running {} updates on {} cells, {} times ↴   ",
@@ -51,7 +43,7 @@ fn run_benchmark() {
     let progress_string = format!("0 out of {}", runs);
     eprint!("{: ^width$}\r", progress_string, width = line_len);
     for i in 1..=runs {
-        let mut state = state();
+        let mut state = state::state();
 
         let mut collection = Vec::default();
         for _ in 0..cell_amount {

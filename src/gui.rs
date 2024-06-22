@@ -7,7 +7,6 @@ use nannou::rand::random_range;
 use nannou::window;
 use nannou::winit::event::ElementState::{Pressed, Released};
 use nannou::winit::event::WindowEvent as WinitEvent;
-use crate::state::*;
 use std::time::{Duration, Instant};
 
 pub fn run_gui() {
@@ -16,7 +15,7 @@ pub fn run_gui() {
 
 struct Model {
     _window: window::Id,
-    state: Box<dyn State>,
+    state: Box<dyn crate::state::State>,
     view: Vec2,
     last_view: Vec2,
     scale: f32,
@@ -43,7 +42,7 @@ fn model(app: &App) -> Model {
     let generation: usize = 0;
     let dark_mode: bool = true;
 
-    let mut state = state();
+    let mut state = crate::state::state();
 
     // Spawn random amount of cells in random position within range.
     let cell_amount = random_range(2500, 5000);
