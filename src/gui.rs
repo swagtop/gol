@@ -171,16 +171,11 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
 
-    let cell_color;
-    let background_color;
-
-    if model.dark_mode {
-        cell_color = WHITE;
-        background_color = BLACK;
-    } else {
-        cell_color = BLACK;
-        background_color = WHITE;
-    }
+    let (cell_color, background_color) = {
+        match model.dark_mode {
+            true => (WHITE, BLACK),
+            _ => (BLACK, WHITE),
+    }};
 
     let cells = model.state.collect_cells();
 
@@ -189,8 +184,8 @@ fn view(app: &App, model: &Model, frame: Frame) {
         draw.scale(model.scale)
             .rect()
             .w_h(1.0, 1.0)
-            .x((cell.1 as f32) + model.view.x)
-            .y((-cell.0 as f32) + model.view.y)
+            .x(cell.1 as f32 + model.view.x)
+            .y(-cell.0 as f32 + model.view.y)
             .color(cell_color);
     }
 
@@ -206,7 +201,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
             ((corner.x(), corner.y()), cell_color),
         ];
         draw.polyline()
-            .weight(1.0)
+            .weight(4.0 + ((app.time * 2.5).sin().abs() * 4.0))
             .points_colored(points);
     }
     

@@ -15,7 +15,8 @@ fn main() {
     // Run benchmark if arg is given.
     if args.len() != 1 {
         match args[1].as_str() {
-            "benchmark" => { run_benchmark(); return; }
+            "benchmark" | "--benchmark" | "-b" => { run_benchmark(); return; }
+            "help" | "--help" | "-h" => { print_help(); return; }
             "file" => { gui::run_gui(); return; },
             _ => ()
         }
@@ -87,6 +88,24 @@ fn run_benchmark() {
         Ok(i) => println!("Thread count: {:>width$}   ", i, width = line_len - 17),
         Err(_) => println!("No multithreading"),
     }
+}
+
+fn print_help() {
+    let help_string = "\
+| Input                    | Action                       |
+| :----------------------- | :--------------------------- |
+| `left-click`             | Move view in mouse direction |
+| `+` `-` (or scrollwheel) | Zoom in or out               |
+| `tab`                    | Toggle stats                 |
+| `c`                      | Toggle dark mode             |
+| `space`                  | Toggle pause                 |
+| `t`                      | Advance cells by one tick    |
+| `h`                      | Jump back home, to (0, 0)    |
+| `j`                      | Jump to random live cell     |
+| `z`                      | Undo last jump               |\
+    ";
+
+    println!("{}", help_string);
 }
 
 //

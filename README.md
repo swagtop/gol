@@ -18,8 +18,8 @@ Here are some ways to interact with the game:
 | Input                    | Action                       |
 | :----------------------- | :--------------------------- |
 | `left-click`             | Move view in mouse direction |
-| `+` `-` (or scrollwheel) | Zooms in or out              |
-| `tab`                    | Toggles stats                |
+| `+` `-` (or scrollwheel) | Zoom in or out               |
+| `tab`                    | Toggle stats                 |
 | `c`                      | Toggle dark mode             |
 | `space`                  | Toggle pause                 |
 | `t`                      | Advance cells by one tick    |
