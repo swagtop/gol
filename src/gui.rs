@@ -145,7 +145,7 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
         WinitEvent::HoveredFile { .. } => model.hovering_file = true,
         WinitEvent::DroppedFile(path) => {
             model.hovering_file = false;
-            model.state.insert_cells(file::cells_from_file(path.as_path().to_str().unwrap().to_string()));
+            model.state.insert_cells_rel(file::cells_from_file(path.as_path().to_str().unwrap().to_string()), model.view);
         }
         WinitEvent::HoveredFileCancelled => model.hovering_file = false,
         _ => (),
@@ -228,6 +228,19 @@ fn view(app: &App, model: &Model, frame: Frame) {
         draw.text(&cells.len().to_string())
             .x(corner.x() + 100.0)
             .y(corner.y() - 52.5)
+            .color(cell_color)
+            .left_justify();
+
+        let status = {
+            if model.paused {
+                "Paused"
+            } else {
+                "Running"
+            }
+        };
+        draw.text(status)
+            .x(corner.x() + 100.0)
+            .y(corner.y() - 62.5)
             .color(cell_color)
             .left_justify();
     }

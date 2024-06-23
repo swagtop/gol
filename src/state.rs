@@ -1,4 +1,5 @@
 use fxhash::FxHashSet as HashSet;
+use nannou::prelude::Vec2;
 use std::thread;
 use crate::parallel;
 use crate::single;
@@ -6,6 +7,7 @@ use crate::single;
 pub trait State {
     fn tick(&mut self);
     fn insert_cells(&mut self, cells: Vec<(i32, i32)>);
+    fn insert_cells_rel(&mut self, cells: Vec<(i32, i32)>, view: Vec2);
     fn collect_cells(&self) -> Vec<(i32, i32)>;
     fn count_cells(&self) -> usize;
     fn generation(&self) -> usize;
