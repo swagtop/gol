@@ -109,7 +109,7 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
                         model.view = model.last_view;
                         model.last_view = current_view;
                     }
-                    Some(P) => model.paused = !model.paused,
+                    Some(Space) => model.paused = !model.paused,
                     Some(T) => {
                         model.state.tick();
                     }
@@ -196,6 +196,19 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     let corner = Rect::from_w_h(0.0, 0.0).top_left_of(frame.rect());
     let coordinates = format!("{}, {}", (-model.view.x) as i32, (-model.view.y) as i32);
+
+    if model.hovering_file {
+        let points: [((_, _), _); 5] = [
+            ((corner.x(), corner.y()), cell_color),
+            ((corner.x() + frame.rect().w(), corner.y()), cell_color),
+            ((corner.x() + frame.rect().w(), corner.y() - frame.rect().h()), cell_color),
+            ((corner.x(), corner.y() - frame.rect().h()), cell_color),
+            ((corner.x(), corner.y()), cell_color),
+        ];
+        draw.polyline()
+            .weight(1.0)
+            .points_colored(points);
+    }
     
     if model.show_stats {
         draw.text("Coordinates:")
@@ -243,19 +256,6 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .y(corner.y() - 62.5)
             .color(cell_color)
             .left_justify();
-    }
-
-    if model.hovering_file {
-        let points: [((_, _), _); 5] = [
-            ((corner.x(), corner.y()), cell_color),
-            ((corner.x() + frame.rect().w(), corner.y()), cell_color),
-            ((corner.x() + frame.rect().w(), corner.y() - frame.rect().h()), cell_color),
-            ((corner.x(), corner.y() - frame.rect().h()), cell_color),
-            ((corner.x(), corner.y()), cell_color),
-        ];
-        draw.polyline()
-            .weight(10.0)
-            .points_colored(points);
     }
 
     draw.to_frame(app, &frame).unwrap();

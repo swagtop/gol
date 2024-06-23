@@ -68,7 +68,7 @@ impl State for SingleState {
 
     fn insert_cells_rel(&mut self, mut collection: Vec<(i32, i32)>, view: Vec2) {
         for cell in collection.drain(0..) {
-            self.cells.insert((cell.1 + (view.y as i32), cell.0 - (view.x as i32)));
+            self.cells.insert((cell.0 + view.y as i32, cell.1 - view.x as i32));
         }
     }
 

@@ -21,7 +21,7 @@ Here are some ways to interact with the game:
 | `+` `-` (or scrollwheel) | Zooms in or out              |
 | `tab`                    | Toggles stats                |
 | `c`                      | Toggle dark mode             |
-| `p`                      | Pause or unpause             |
+| `space`                  | Toggle pause                 |
 | `t`                      | Advance cells by one tick    |
 | `h`                      | Jump back home, to (0, 0)    |
 | `j`                      | Jump to random live cell     |

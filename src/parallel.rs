@@ -159,7 +159,7 @@ impl State for ParallelState {
         let mut cells = self.cells.write().unwrap();
         
         for cell in collection.drain(0..) {
-            cells.insert((cell.1 + (view.y as i32), cell.0 - (view.x as i32)));
+            cells.insert((cell.0 + view.y as i32, cell.1 - view.x as i32));
         }
     }
 
