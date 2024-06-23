@@ -15,11 +15,13 @@ fn main() {
     // Run benchmark if arg is given.
     if args.len() != 1 {
         match args[1].as_str() {
-            "benchmark" | "--benchmark" | "-b" => { run_benchmark(); return; }
-            "help" | "--help" | "-h" => { print_help(); return; }
-            "file" => { gui::run_gui(); return; },
+            "benchmark" | "--benchmark" | "-b" => { run_benchmark(); }
+            "help" | "--help" | "-h" => { print_help(); }
+            "version" | "--version" | "-v" => { println!("gol version 1.0.0"); }
+            "file" => { gui::run_gui(); },
             _ => ()
         }
+        return;
     }
 
     gui::run_gui();
