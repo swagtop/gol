@@ -192,13 +192,15 @@ fn view(app: &App, model: &Model, frame: Frame) {
         if cell.0 > screen_bottom && cell.0 < screen_top &&
             -cell.1 > screen_left && -cell.1 < screen_right {
             
+            let coordinates: Vec2 = (cell.1 as f32 + model.view.x - 0.5, -cell.0 as f32 + model.view.y).into();
             draw.scale(model.scale)
-                .rect()
-                .w_h(1.0, 1.0)
-                .x(cell.1 as f32 + model.view.x)
-                .y(-cell.0 as f32 + model.view.y)
+                .line()
+                .weight(1.0)
+                .start((coordinates.x + 1.0, coordinates.y).into())
+                .end(coordinates)
                 .color(cell_color);
-            rendered += 1;
+            
+                rendered += 1;
         }
     }
 
