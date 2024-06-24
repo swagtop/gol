@@ -33,7 +33,7 @@ fn run_benchmark() {
     let mut time_vec = Vec::new();
 
     let updates_per_run = 500;
-    let cell_amount = 3750;
+    let cell_amount = 375000;
     let runs = 100;
 
     let label_string = format!(
@@ -52,7 +52,7 @@ fn run_benchmark() {
 
         let mut collection = Vec::default();
         for _ in 0..cell_amount {
-            let cell = (random_range(-100, 100), random_range(-100, 100));
+            let cell = (random_range(-1000, 1000), random_range(-1000, 1000));
             collection.push(cell);
         }
         state.insert_cells(collection);

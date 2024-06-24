@@ -45,18 +45,16 @@ fn model(app: &App) -> Model {
     let paused: bool = false;
     let hovering_file: bool = false;
 
-    let state = crate::state::state();
+    let mut state = crate::state::state();
 
     // Spawn random amount of cells in random position within range.
-    /*
-    let cell_amount = random_range(2500, 5000);
-    let mut cell_vec = Vec::default();
+    let cell_amount = random_range(250000, 500000);
+    let mut collection = Vec::default();
     for _ in 0..cell_amount {
-        let cell = (random_range(-100, 100), random_range(-100, 100));
-        cell_vec.push(cell);
+        let cell = (random_range(-1000, 1000), random_range(-1000, 1000));
+        collection.push(cell);
     }
-    state.insert_cells(cell_vec);
-    */
+    state.insert_cells(collection);
 
     Model {
         _window,
@@ -178,18 +176,32 @@ fn view(app: &App, model: &Model, frame: Frame) {
     }};
 
     let cells = model.state.collect_cells();
+    let corner = Rect::from_w_h(0.0, 0.0).top_left_of(frame.rect());
+    let (screen_left, screen_right) = (
+        ((corner.x()) / model.scale + model.view.x) as i32 - 2, 
+        ((corner.x() + frame.rect().w()) / model.scale + (model.view.x)) as i32 + 2
+    );
+    let (screen_top, screen_bottom) = (
+        (((corner.y()) / model.scale + (model.view.y))) as i32 + 2,
+        ((corner.y() - frame.rect().h()) / model.scale + (model.view.y)) as i32 - 2
+    );
 
+    let mut rendered = 0;
     draw.background().color(background_color);
     for cell in &cells {
-        draw.scale(model.scale)
-            .rect()
-            .w_h(1.0, 1.0)
-            .x(cell.1 as f32 + model.view.x)
-            .y(-cell.0 as f32 + model.view.y)
-            .color(cell_color);
+        if cell.0 > screen_bottom && cell.0 < screen_top &&
+            -cell.1 > screen_left && -cell.1 < screen_right {
+            
+            draw.scale(model.scale)
+                .rect()
+                .w_h(1.0, 1.0)
+                .x(cell.1 as f32 + model.view.x)
+                .y(-cell.0 as f32 + model.view.y)
+                .color(cell_color);
+            rendered += 1;
+        }
     }
 
-    let corner = Rect::from_w_h(0.0, 0.0).top_left_of(frame.rect());
     let coordinates = format!("{}, {}", (-model.view.x) as i32, (-model.view.y) as i32);
 
     if model.hovering_file {
