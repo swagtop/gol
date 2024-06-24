@@ -161,6 +161,14 @@ impl State for ParallelState {
             cells.insert((cell.0 + view.y as i32, cell.1 - view.x as i32));
         }
     }
+    
+    fn insert_cell(&mut self, cell: (i32, i32)) {
+        self.cells.write().unwrap().insert(cell);
+    }
+    
+    fn insert_cell_rel(&mut self, cell: (i32, i32), view: Vec2) {
+        self.cells.write().unwrap().insert((cell.0 + view.y as i32, cell.1 - view.x as i32));
+    }
 
     fn collect_cells(&self) -> Vec<(i32, i32)> {
         let cells = self.cells.read().unwrap();

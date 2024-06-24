@@ -2,11 +2,12 @@ use nannou::color::{BLACK, WHITE};
 use nannou::event::Key::*;
 use nannou::prelude::MouseScrollDelta;
 use nannou::prelude::Rect;
-use nannou::prelude::{App, Frame, MouseButton::Left, Update, Vec2};
+use nannou::prelude::{App, Frame, MouseButton::Left, MouseButton::Right, Update, Vec2};
 use nannou::rand::random_range;
 use nannou::window;
 use nannou::winit::event::ElementState::{Pressed, Released};
 use nannou::winit::event::WindowEvent as WinitEvent;
+use nannou::winit::dpi::PhysicalPosition;
 use std::time::{Duration, Instant};
 use crate::file;
 
@@ -19,11 +20,13 @@ struct Model {
     state: Box<dyn crate::state::State>,
     view: Vec2,
     last_view: Vec2,
+    cursor_location: Vec2,
     scale: f32,
     clicked: bool,
     show_stats: bool,
     dark_mode: bool,
     paused: bool,
+    drawing: bool,
     hovering_file: bool,
     last_update: Instant,
 }
@@ -38,11 +41,13 @@ fn model(app: &App) -> Model {
 
     let view: Vec2 = (0.0, 0.0).into();
     let last_view: Vec2 = view.clone();
+    let cursor_location: Vec2 = (0.0, 0.0).into();
     let scale: f32 = 10.0;
     let clicked: bool = false;
     let show_stats: bool = false;
     let dark_mode: bool = true;
     let paused: bool = false;
+    let drawing: bool = false;
     let hovering_file: bool = false;
 
     let mut state = crate::state::state();
@@ -61,11 +66,13 @@ fn model(app: &App) -> Model {
         state,
         view,
         last_view,
+        cursor_location,
         scale,
         clicked,
         show_stats,
         dark_mode,
         paused,
+        drawing,
         hovering_file,
         last_update: Instant::now(),
     }
@@ -75,7 +82,6 @@ fn model(app: &App) -> Model {
 fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
     match winit_event {
         WinitEvent::KeyboardInput { input, .. } => {
-            //println!("{:?}", input);
             if input.state == Pressed {
                 match input.virtual_keycode {
                     Some(Minus) | Some(NumpadSubtract) => {
@@ -121,16 +127,29 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
                 }
             }
         }
+        WinitEvent::CursorMoved { position, .. } => {
+            model.cursor_location = (position.x as f32, position.y as f32).into();
+        }
         WinitEvent::MouseInput {
             state: Pressed,
             button: Left,
             ..
-        } => model.clicked = true,
+        } => {
+            model.clicked = true
+        },
         WinitEvent::MouseInput {
             state: Released,
             button: Left,
             ..
         } => model.clicked = false,
+        WinitEvent::MouseInput {
+            state: Pressed,
+            button: Right,
+            ..
+        } => {
+            model.drawing = !model.drawing;
+            //_app.main_window().set_cursor_visible(!model.drawing);
+        }
         WinitEvent::MouseWheel {
             delta: MouseScrollDelta::LineDelta(_, y),
             ..
@@ -151,10 +170,8 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
 }
 
 fn update(app: &App, model: &mut Model, _update: Update) {
-    let clicked = model.clicked;
-
     // Move view when clicked.
-    if clicked {
+    if model.clicked && !model.drawing {
         model.view.x -= app.mouse.x / 100.0 / model.scale;
         model.view.y -= app.mouse.y / 100.0 / model.scale;
     }
@@ -218,6 +235,42 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .weight(4.0 + ((app.time * 2.5).sin().abs() * 4.0))
             .points_colored(points);
     }
+
+    let (frame_x, frame_y) = (frame.rect().w() / 2.0, frame.rect().h() / 2.0);
+    let (x, y) = (model.cursor_location.x - frame_x, model.cursor_location.y - frame_y);
+    let (x, y) = (x / model.scale, -y / model.scale);
+    //let (x, y) = (x.trunc() + model.view.x.fract() - model.scale * 2.0, y.trunc() + model.view.y.fract() - model.scale * 2.0);
+    let (x, y) = (x - 1.0, y + 1.0);
+    let (x, y) = {
+        (x.trunc() + model.view.x.fract(), y.trunc() + model.view.y.fract())
+    };
+    let (x, y) = {
+        (x * model.scale, y * model.scale)
+    };
+    /*
+    let (x, y) = {
+        let x_offset = ((x as i32) % (model.scale as i32)) as f32;
+        let y_offset = ((y as i32) % (model.scale as i32)) as f32;
+        ((x - x_offset), -(y - y_offset))
+    }; 
+    */
+    
+    //let (x, y) = (x - (0.5 * model.scale) * x.signum(), y - (0.5 * model.scale) * y.signum());
+        
+    if model.drawing {
+        let points: [((_, _), _); 6] = [
+            ((x, y), cell_color),
+            ((x + model.scale, y), cell_color),
+            ((x + model.scale, y - model.scale), cell_color),
+            ((x, y - model.scale), cell_color),
+            ((x, y), cell_color),
+            ((x + model.scale, y), cell_color),
+        ];
+        draw.polyline()
+            .caps_square()
+            .weight(1.0 + (app.time * 2.5).sin().abs() * model.scale / 15.0)
+            .points_colored(points);
+    }
     
     if model.show_stats {
         draw.text("Coordinates:")
@@ -231,36 +284,47 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .color(cell_color)
             .left_justify();
 
-        draw.text("Generation:")
+        draw.text("Cursor:")
             .x(corner.x() + 100.0)
             .y(corner.y() - 22.5)
             .color(cell_color)
             .left_justify();
-        draw.text(&model.state.generation().to_string())
+        draw.text(&format!("{}, {}", ((x / model.scale) - model.view.x) as i32, ((y / model.scale) - model.view.y) as i32))
             .x(corner.x() + 100.0)
             .y(corner.y() - 32.5)
             .color(cell_color)
             .left_justify();
 
-        draw.text("Live cells:")
+        draw.text("Generation:")
             .x(corner.x() + 100.0)
             .y(corner.y() - 42.5)
             .color(cell_color)
             .left_justify();
-        draw.text(&cells.len().to_string())
+        draw.text(&model.state.generation().to_string())
             .x(corner.x() + 100.0)
             .y(corner.y() - 52.5)
             .color(cell_color)
             .left_justify();
 
-        draw.text("Rendered cells:")
+        draw.text("Live cells:")
             .x(corner.x() + 100.0)
             .y(corner.y() - 62.5)
             .color(cell_color)
             .left_justify();
-        draw.text(&rendered.to_string())
+        draw.text(&cells.len().to_string())
             .x(corner.x() + 100.0)
             .y(corner.y() - 72.5)
+            .color(cell_color)
+            .left_justify();
+
+        draw.text("Rendered cells:")
+            .x(corner.x() + 100.0)
+            .y(corner.y() - 82.5)
+            .color(cell_color)
+            .left_justify();
+        draw.text(&rendered.to_string())
+            .x(corner.x() + 100.0)
+            .y(corner.y() - 92.5)
             .color(cell_color)
             .left_justify();
 
@@ -273,7 +337,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
         };
         draw.text(status)
             .x(corner.x() + 100.0)
-            .y(corner.y() - 82.5)
+            .y(corner.y() - 102.5)
             .color(cell_color)
             .left_justify();
     }

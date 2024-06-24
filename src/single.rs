@@ -71,6 +71,14 @@ impl State for SingleState {
             self.cells.insert((cell.0 + view.y as i32, cell.1 - view.x as i32));
         }
     }
+    
+    fn insert_cell(&mut self, cell: (i32, i32)) {
+        self.cells.insert(cell);
+    }
+    
+    fn insert_cell_rel(&mut self, cell: (i32, i32), view: Vec2) {
+        self.cells.insert((cell.0 + view.y as i32, cell.1 - view.x as i32));
+    }
 
     fn collect_cells(&self) -> Vec<(i32, i32)> {
         let mut collection = Vec::default();
@@ -85,7 +93,7 @@ impl State for SingleState {
     fn count_cells(&self) -> usize {
         self.cells.len()
     }
-
+    
     fn generation(&self) -> usize {
         self.generation
     }

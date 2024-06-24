@@ -8,6 +8,8 @@ pub trait State {
     fn tick(&mut self);
     fn insert_cells(&mut self, cells: Vec<(i32, i32)>);
     fn insert_cells_rel(&mut self, cells: Vec<(i32, i32)>, view: Vec2);
+    fn insert_cell(&mut self, cell: (i32, i32));
+    fn insert_cell_rel(&mut self, cell: (i32, i32), view: Vec2);
     fn collect_cells(&self) -> Vec<(i32, i32)>;
     fn count_cells(&self) -> usize;
     fn generation(&self) -> usize;
