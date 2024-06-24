@@ -93,13 +93,12 @@ impl State for ParallelState {
 
         // Main thread
         {
-            let thread_cells = Arc::clone(&cells_vec);
-            let thread_cells_set = Arc::clone(&self.cells);
-            let thread_kill_lists = Arc::clone(&self.kill_lists);
-            let thread_res_lists = Arc::clone(&self.res_lists);
-            let this_thread_distribution = Arc::clone(&thread_distribution);
+            let thread_cells = &cells_vec;
+            let thread_cells_set = &self.cells;
+            let thread_kill_lists = &self.kill_lists;
+            let thread_res_lists = &self.res_lists;
             
-            let slice_start = (self.thread_amount - 1) * *this_thread_distribution;
+            let slice_start = (self.thread_amount - 1) * *thread_distribution;
             let slice = &thread_cells.read().unwrap()[slice_start .. thread_cells.read().unwrap().len()];
 
             let cells = thread_cells_set.read().unwrap();

@@ -253,6 +253,17 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .color(cell_color)
             .left_justify();
 
+        draw.text("Rendered cells:")
+            .x(corner.x() + 100.0)
+            .y(corner.y() - 62.5)
+            .color(cell_color)
+            .left_justify();
+        draw.text(&rendered.to_string())
+            .x(corner.x() + 100.0)
+            .y(corner.y() - 72.5)
+            .color(cell_color)
+            .left_justify();
+
         let status = {
             if model.paused {
                 "Paused"
@@ -262,7 +273,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
         };
         draw.text(status)
             .x(corner.x() + 100.0)
-            .y(corner.y() - 62.5)
+            .y(corner.y() - 82.5)
             .color(cell_color)
             .left_justify();
     }
