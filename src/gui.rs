@@ -7,7 +7,6 @@ use nannou::rand::random_range;
 use nannou::window;
 use nannou::winit::event::ElementState::{Pressed, Released};
 use nannou::winit::event::WindowEvent as WinitEvent;
-use nannou::winit::dpi::PhysicalPosition;
 use std::time::{Duration, Instant};
 use crate::file;
 

@@ -15,5 +15,4 @@ name = "gol"
 path = "src/main.rs"
 
 [profile.release]
-debug = true
 

@@ -134,9 +134,10 @@ impl State for ParallelState {
         }
         for kill_list in self.kill_lists.iter() {
             let mut kill_list = kill_list.lock().unwrap();
-            for cell in kill_list.drain(0..) {
+            for cell in kill_list.iter() {
                 cells.remove(&cell);
             }
+            kill_list.clear();
         }
         for res_list in self.res_lists.iter() {
             let mut res_list = res_list.lock().unwrap();

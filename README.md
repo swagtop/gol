@@ -15,17 +15,18 @@ When compiling, I recommend that you use `cargo run --release`, as the performan
 
 Here are some ways to interact with the game:
 
-| Input                    | Action                       |
-| :----------------------- | :--------------------------- |
-| `left-click`             | Move view in mouse direction |
-| `+` `-` (or scrollwheel) | Zoom in or out               |
-| `tab`                    | Toggle stats                 |
-| `c`                      | Toggle dark mode             |
-| `space`                  | Toggle pause                 |
-| `t`                      | Advance cells by one tick    |
-| `h`                      | Jump back home, to (0, 0)    |
-| `j`                      | Jump to random live cell     |
-| `z`                      | Undo last jump               |
+| Input                    | Action                                |
+| :----------------------- | :------------------------------------ |
+| `+` `-` (or scrollwheel) | Zoom in or out                        |
+| `left-click`             | Move view, or draw if in drawing mode |
+| `right-click`            | Toggle drawing mode                   |
+| `tab`                    | Toggle stats                          |
+| `c`                      | Toggle dark mode                      |
+| `space`                  | Toggle pause                          |
+| `t`                      | Advance cells by one tick             |
+| `h`                      | Jump back home, to (0, 0)             |
+| `j`                      | Jump to random live cell              |
+| `z`                      | Undo last jump                        |
 
 You can also drag and drop files into the game window ([unless you are on Wayland](https://github.com/rust-windowing/winit/issues/720)), and it will load a cell configuration into the universe, based on the characters in the file. So long as you only use ASCII characters, the program should be able to work out which characters represent cells, and which represent empty space.
 
