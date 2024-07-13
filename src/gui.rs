@@ -20,6 +20,7 @@ struct Model {
     view: Vec2,
     last_view: Vec2,
     cursor_location: Vec2,
+    cursor_cell: (i32, i32),
     scale: f32,
     clicked: bool,
     show_stats: bool,
@@ -41,6 +42,7 @@ fn model(app: &App) -> Model {
     let view: Vec2 = (0.0, 0.0).into();
     let last_view: Vec2 = view.clone();
     let cursor_location: Vec2 = (0.0, 0.0).into();
+    let cursor_cell: (i32, i32) = (0, 0);
     let scale: f32 = 10.0;
     let clicked: bool = false;
     let show_stats: bool = false;
@@ -66,6 +68,7 @@ fn model(app: &App) -> Model {
         view,
         last_view,
         cursor_location,
+        cursor_cell,
         scale,
         clicked,
         show_stats,
@@ -78,7 +81,7 @@ fn model(app: &App) -> Model {
 }
 
 // https://docs.rs/winit/0.28.7/winit/event/enum.WindowEvent.html
-fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
+fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
     match winit_event {
         WinitEvent::KeyboardInput { input, .. } => {
             if input.state == Pressed {
@@ -99,6 +102,7 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
                         model.last_view = model.view.clone();
                         model.view = (0.0, 0.0).into();
                     }
+                    Some(A) => model.view = (-100000.0, 1000000.0).into(),
                     Some(J) => {
                         model.last_view = model.view.clone();
                         let cells: Vec<(i32, i32)> =
@@ -127,7 +131,19 @@ fn raw_window_event(_app: &App, model: &mut Model, winit_event: &WinitEvent) {
             }
         }
         WinitEvent::CursorMoved { position, .. } => {
-            model.cursor_location = (position.x as f32, position.y as f32).into();
+            //model.cursor_cell = 
+            let (frame_x, frame_y) = (app.window_rect().w() / 2.0, app.window_rect().h() / 2.0);
+            let (x, y) = (position.x as f32 - frame_x, position.y as f32 - frame_y);
+            let (x, y) = (x / model.scale, -y / model.scale);
+            //let (x, y) = (x.trunc() + model.view.x.fract() - model.scale * 2.0, y.trunc() + model.view.y.fract() - model.scale * 2.0);
+            let (x, y) = (x, y + 1.0);
+            let (x, y) = {
+                (x.floor() - model.view.x.fract(), y.floor() - model.view.y.fract())
+            };
+            let (x, y) = {
+                (x * model.scale, y * model.scale)
+            };
+            model.cursor_location = (x as f32, y as f32).into();
         }
         WinitEvent::MouseInput {
             state: Pressed,
@@ -234,18 +250,6 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .weight(4.0 + ((app.time * 2.5).sin().abs() * 4.0))
             .points_colored(points);
     }
-
-    let (frame_x, frame_y) = (frame.rect().w() / 2.0, frame.rect().h() / 2.0);
-    let (x, y) = (model.cursor_location.x - frame_x, model.cursor_location.y - frame_y);
-    let (x, y) = (x / model.scale, -y / model.scale);
-    //let (x, y) = (x.trunc() + model.view.x.fract() - model.scale * 2.0, y.trunc() + model.view.y.fract() - model.scale * 2.0);
-    let (x, y) = (x - 1.0, y + 1.0);
-    let (x, y) = {
-        (x.trunc() + model.view.x.fract(), y.trunc() + model.view.y.fract())
-    };
-    let (x, y) = {
-        (x * model.scale, y * model.scale)
-    };
     /*
     let (x, y) = {
         let x_offset = ((x as i32) % (model.scale as i32)) as f32;
@@ -255,7 +259,9 @@ fn view(app: &App, model: &Model, frame: Frame) {
     */
     
     //let (x, y) = (x - (0.5 * model.scale) * x.signum(), y - (0.5 * model.scale) * y.signum());
-        
+    //let cursor_cell = (((x / model.scale) - model.view.x) as i32, ((y / model.scale) - model.view.y) as i32);
+    //model.cursor_cell = cursor_cell;
+    let (x, y) = model.cursor_location.into();
     if model.drawing {
         let points: [((_, _), _); 6] = [
             ((x, y), cell_color),
@@ -270,6 +276,11 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .weight(1.0 + (app.time * 2.5).sin().abs() * model.scale / 15.0)
             .points_colored(points);
     }
+    /*
+    if model.drawing && model.clicked {
+        model.state.insert_cell(cursor_cell);
+    }
+    */
     
     if model.show_stats {
         draw.text("Coordinates:")
@@ -288,11 +299,13 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .y(corner.y() - 22.5)
             .color(cell_color)
             .left_justify();
-        draw.text(&format!("{}, {}", ((x / model.scale) - model.view.x) as i32, ((y / model.scale) - model.view.y) as i32))
+        /*
+        draw.text(&format!("{}, {}", cursor_cell.0, cursor_cell.1))
             .x(corner.x() + 100.0)
             .y(corner.y() - 32.5)
             .color(cell_color)
             .left_justify();
+        */
 
         draw.text("Generation:")
             .x(corner.x() + 100.0)
