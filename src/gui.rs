@@ -277,7 +277,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
         (x as f32 + model.view.x - 0.5, y as f32 + model.view.y - 0.5)
     };
     if model.drawing {
-        let points: [((_, _), _); 6] = [
+        let cell_color_points: [((_, _), _); 6] = [
             ((cursor_x, cursor_y), cell_color),
             ((cursor_x, cursor_y + 1.0), cell_color),
             ((cursor_x + 1.0, cursor_y + 1.0), cell_color),
@@ -287,9 +287,8 @@ fn view(app: &App, model: &Model, frame: Frame) {
         ];
         draw.scale(model.scale)
             .polyline()
-            .caps_square()
             .weight(0.1 + (app.time * 2.5).sin().abs() / 15.0)
-            .points_colored(points);
+            .points_colored(cell_color_points);
     }
     
     if model.show_stats {
