@@ -82,6 +82,9 @@ fn model(app: &App) -> Model {
 
 // https://docs.rs/winit/0.28.7/winit/event/enum.WindowEvent.html
 fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
+    fn update_cursor(app: &App, model: &mut Model) -> () {
+    }
+
     match winit_event {
         WinitEvent::KeyboardInput { input, .. } => {
             if input.state == Pressed {
@@ -131,19 +134,12 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
             }
         }
         WinitEvent::CursorMoved { position, .. } => {
-            //model.cursor_cell = 
             let (frame_x, frame_y) = (app.window_rect().w() / 2.0, app.window_rect().h() / 2.0);
             let (x, y) = (position.x as f32 - frame_x, position.y as f32 - frame_y);
             let (x, y) = (x / model.scale, -y / model.scale);
             let (x, y) = (x - 0.5, y - 0.5);
-            //let (x, y) = (x.trunc() + model.view.x.fract() - model.scale * 2.0, y.trunc() + model.view.y.fract() - model.scale * 2.0);
             let (x, y) = (x, y + 1.0);
             let (x, y) = (x - model.view.x, y - model.view.y);
-            /*
-            let (x, y) = {
-                (x.floor() - model.view.x.fract(), y.floor() - model.view.y.fract())
-            };
-            */
             model.cursor_cell = (x.floor() as i32 + 1, y.floor() as i32);
 
             if model.drawing && model.clicked {
@@ -258,17 +254,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .weight(4.0 + ((app.time * 2.5).sin().abs() * 4.0))
             .points_colored(points);
     }
-    /*
-    let (x, y) = {
-        let x_offset = ((x as i32) % (model.scale as i32)) as f32;
-        let y_offset = ((y as i32) % (model.scale as i32)) as f32;
-        ((x - x_offset), -(y - y_offset))
-    }; 
-    */
-    
-    //let (x, y) = (x - (0.5 * model.scale) * x.signum(), y - (0.5 * model.scale) * y.signum());
-    //let cursor_cell = (((x / model.scale) - model.view.x) as i32, ((y / model.scale) - model.view.y) as i32);
-    //model.cursor_cell = cursor_cell;
+
     let (x, y) = model.cursor_cell.into();
     let (cursor_x, cursor_y) = {
         (x as f32 + model.view.x - 0.5, y as f32 + model.view.y - 0.5)
@@ -288,10 +274,6 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .weight(0.1 + (app.time * 2.5).sin().abs() / 15.0)
             .points_colored(points);
     }
-    /*
-    if model.drawing && model.clicked {
-    }
-    */
     
     if model.show_stats {
         draw.text("Coordinates:")
