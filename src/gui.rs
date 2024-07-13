@@ -143,7 +143,7 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
             let (x, y) = {
                 (x * model.scale, y * model.scale)
             };
-            model.cursor_location = (x as f32, y as f32).into();
+            model.cursor_cell = (x.floor() as i32, y.floor() as i32);
         }
         WinitEvent::MouseInput {
             state: Pressed,
@@ -261,7 +261,10 @@ fn view(app: &App, model: &Model, frame: Frame) {
     //let (x, y) = (x - (0.5 * model.scale) * x.signum(), y - (0.5 * model.scale) * y.signum());
     //let cursor_cell = (((x / model.scale) - model.view.x) as i32, ((y / model.scale) - model.view.y) as i32);
     //model.cursor_cell = cursor_cell;
-    let (x, y) = model.cursor_location.into();
+    let (x, y) = model.cursor_cell.into();
+    let (cursor_box_x, cursor_box_y) = {
+        (x as f32 + 
+    }
     if model.drawing {
         let points: [((_, _), _); 6] = [
             ((x, y), cell_color),
@@ -299,13 +302,11 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .y(corner.y() - 22.5)
             .color(cell_color)
             .left_justify();
-        /*
-        draw.text(&format!("{}, {}", cursor_cell.0, cursor_cell.1))
+        draw.text(&format!("{}, {}", model.cursor_cell.0, model.cursor_cell.1))
             .x(corner.x() + 100.0)
             .y(corner.y() - 32.5)
             .color(cell_color)
             .left_justify();
-        */
 
         draw.text("Generation:")
             .x(corner.x() + 100.0)
