@@ -139,9 +139,11 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
             //let (x, y) = (x.trunc() + model.view.x.fract() - model.scale * 2.0, y.trunc() + model.view.y.fract() - model.scale * 2.0);
             let (x, y) = (x, y + 1.0);
             let (x, y) = (x - model.view.x, y - model.view.y);
+            /*
             let (x, y) = {
                 (x.floor() - model.view.x.fract(), y.floor() - model.view.y.fract())
             };
+            */
             model.cursor_cell = (x.floor() as i32 + 1, y.floor() as i32);
 
             if model.drawing && model.clicked {
