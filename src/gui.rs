@@ -135,22 +135,28 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
             let (frame_x, frame_y) = (app.window_rect().w() / 2.0, app.window_rect().h() / 2.0);
             let (x, y) = (position.x as f32 - frame_x, position.y as f32 - frame_y);
             let (x, y) = (x / model.scale, -y / model.scale);
+            let (x, y) = (x - 0.5, y - 0.5);
             //let (x, y) = (x.trunc() + model.view.x.fract() - model.scale * 2.0, y.trunc() + model.view.y.fract() - model.scale * 2.0);
             let (x, y) = (x, y + 1.0);
+            let (x, y) = (x - model.view.x, y - model.view.y);
             let (x, y) = {
                 (x.floor() - model.view.x.fract(), y.floor() - model.view.y.fract())
             };
-            let (x, y) = {
-                (x * model.scale, y * model.scale)
-            };
-            model.cursor_cell = (x.floor() as i32, y.floor() as i32);
+            model.cursor_cell = (x.floor() as i32 + 1, y.floor() as i32);
+
+            if model.drawing && model.clicked {
+                model.state.insert_cell((-model.cursor_cell.1, model.cursor_cell.0));
+            }
         }
         WinitEvent::MouseInput {
             state: Pressed,
             button: Left,
             ..
         } => {
-            model.clicked = true
+            model.clicked = true;
+            if model.drawing && model.clicked {
+                model.state.insert_cell((-model.cursor_cell.1, model.cursor_cell.0));
+            }
         },
         WinitEvent::MouseInput {
             state: Released,
@@ -262,26 +268,26 @@ fn view(app: &App, model: &Model, frame: Frame) {
     //let cursor_cell = (((x / model.scale) - model.view.x) as i32, ((y / model.scale) - model.view.y) as i32);
     //model.cursor_cell = cursor_cell;
     let (x, y) = model.cursor_cell.into();
-    let (cursor_box_x, cursor_box_y) = {
-        (x as f32 + 
-    }
+    let (cursor_x, cursor_y) = {
+        (x as f32 + model.view.x - 0.5, y as f32 + model.view.y - 0.5)
+    };
     if model.drawing {
         let points: [((_, _), _); 6] = [
-            ((x, y), cell_color),
-            ((x + model.scale, y), cell_color),
-            ((x + model.scale, y - model.scale), cell_color),
-            ((x, y - model.scale), cell_color),
-            ((x, y), cell_color),
-            ((x + model.scale, y), cell_color),
+            ((cursor_x, cursor_y), cell_color),
+            ((cursor_x, cursor_y + 1.0), cell_color),
+            ((cursor_x + 1.0, cursor_y + 1.0), cell_color),
+            ((cursor_x + 1.0, cursor_y), cell_color),
+            ((cursor_x, cursor_y), cell_color),
+            ((cursor_x, cursor_y + 1.0), cell_color),
         ];
-        draw.polyline()
+        draw.scale(model.scale)
+            .polyline()
             .caps_square()
-            .weight(1.0 + (app.time * 2.5).sin().abs() * model.scale / 15.0)
+            .weight(0.1 + (app.time * 2.5).sin().abs() / 15.0)
             .points_colored(points);
     }
     /*
     if model.drawing && model.clicked {
-        model.state.insert_cell(cursor_cell);
     }
     */
     
