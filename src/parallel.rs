@@ -20,9 +20,9 @@ pub fn parallel_state() -> ParallelState {
     let thread_amount = thread::available_parallelism().unwrap().get();
     
     let kill_lists = Arc::new(
-    (0..thread_amount)
-        .map(|_| Mutex::new(Vec::new()))
-        .collect::<Vec<_>>(),
+        (0..thread_amount)
+            .map(|_| Mutex::new(Vec::new()))
+            .collect::<Vec<_>>(),
     );
 
     let res_lists = Arc::new(

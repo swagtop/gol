@@ -79,18 +79,18 @@ fn model(app: &App) -> Model {
         last_update: Instant::now(),
     }
 }
+    
+fn update_cursor_cell(model: &mut Model) -> () {
+    let (x, y) = (model.cursor_location.x, model.cursor_location.y);
+    let (x, y) = (x / model.scale, -y / model.scale);
+    let (x, y) = (x - 0.5, y - 0.5);
+    let (x, y) = (x, y + 1.0);
+    let (x, y) = (x - model.view.x, y - model.view.y);
+    model.cursor_cell = (x.floor() as i32 + 1, y.floor() as i32);
+}
 
 // https://docs.rs/winit/0.28.7/winit/event/enum.WindowEvent.html
 fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
-    fn update_cursor_cell(model: &mut Model) -> () {
-        let (x, y) = (model.cursor_location.x, model.cursor_location.y);
-        let (x, y) = (x / model.scale, -y / model.scale);
-        let (x, y) = (x - 0.5, y - 0.5);
-        let (x, y) = (x, y + 1.0);
-        let (x, y) = (x - model.view.x, y - model.view.y);
-        model.cursor_cell = (x.floor() as i32 + 1, y.floor() as i32);
-    }
-
     match winit_event {
         WinitEvent::KeyboardInput { input, .. } => {
             if input.state == Pressed {
@@ -148,13 +148,6 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
             let (frame_x, frame_y) = (app.window_rect().w() / 2.0, app.window_rect().h() / 2.0);
             let (x, y) = (position.x as f32 - frame_x, position.y as f32 - frame_y);
             model.cursor_location = (x, y).into();
-            /*
-            let (x, y) = (x / model.scale, -y / model.scale);
-            let (x, y) = (x - 0.5, y - 0.5);
-            let (x, y) = (x, y + 1.0);
-            let (x, y) = (x - model.view.x, y - model.view.y);
-            model.cursor_cell = (x.floor() as i32 + 1, y.floor() as i32);
-            */
             update_cursor_cell(model);
 
             if model.drawing && model.clicked {
@@ -182,7 +175,7 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
             ..
         } => {
             model.drawing = !model.drawing;
-            update_cursor_cell(model);
+            //update_cursor_cell(model);
             //_app.main_window().set_cursor_visible(!model.drawing);
         }
         WinitEvent::MouseWheel {
@@ -210,6 +203,7 @@ fn update(app: &App, model: &mut Model, _update: Update) {
     if model.clicked && !model.drawing {
         model.view.x -= app.mouse.x / 100.0 / model.scale;
         model.view.y -= app.mouse.y / 100.0 / model.scale;
+        update_cursor_cell(model);
     }
 
     // Update cells if enough time has passed.
