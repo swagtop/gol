@@ -16,3 +16,6 @@ path = "src/main.rs"
 
 [profile.release]
 
+[profile.dev]
+overflow-checks = false
+

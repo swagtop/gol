@@ -1,5 +1,4 @@
 use fxhash::FxHashSet as HashSet;
-use nannou::prelude::Vec2;
 use crate::state::*;
 
 pub struct SingleState {
@@ -66,9 +65,9 @@ impl State for SingleState {
         }
     }
 
-    fn insert_cells_rel(&mut self, mut collection: Vec<(i32, i32)>, view: Vec2) {
+    fn insert_cells_rel(&mut self, mut collection: Vec<(i32, i32)>, view: (f64, f64)) {
         for cell in collection.drain(0..) {
-            self.cells.insert((cell.0 + view.y as i32, cell.1 - view.x as i32));
+            self.cells.insert((cell.0 + view.1.floor() as i32, cell.1 - view.0.floor() as i32));
         }
     }
     
@@ -76,8 +75,8 @@ impl State for SingleState {
         self.cells.insert(cell);
     }
     
-    fn insert_cell_rel(&mut self, cell: (i32, i32), view: Vec2) {
-        self.cells.insert((cell.0 + view.y as i32, cell.1 - view.x as i32));
+    fn insert_cell_rel(&mut self, cell: (i32, i32), view: (f64, f64)) {
+        self.cells.insert((cell.0 + view.1.floor() as i32, cell.1 - view.0.floor() as i32));
     }
 
     fn collect_cells(&self) -> Vec<(i32, i32)> {

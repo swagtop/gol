@@ -2,7 +2,6 @@ use std::thread;
 use std::sync::{Arc, Mutex, RwLock};
 use threadpool::ThreadPool;
 use fxhash::FxHashSet as HashSet;
-use nannou::prelude::Vec2;
 use crate::state::*;
 
 pub struct ParallelState {
@@ -155,11 +154,11 @@ impl State for ParallelState {
         }
     }
 
-    fn insert_cells_rel(&mut self, mut collection: Vec<(i32, i32)>, view: Vec2) {
+    fn insert_cells_rel(&mut self, mut collection: Vec<(i32, i32)>, view: (f64, f64)) {
         let mut cells = self.cells.write().unwrap();
         
         for cell in collection.drain(0..) {
-            cells.insert((cell.0 + view.y as i32, cell.1 - view.x as i32));
+            cells.insert((cell.0 + view.1.floor() as i32, cell.1 - view.0.floor() as i32));
         }
     }
     
@@ -167,8 +166,8 @@ impl State for ParallelState {
         self.cells.write().unwrap().insert(cell);
     }
     
-    fn insert_cell_rel(&mut self, cell: (i32, i32), view: Vec2) {
-        self.cells.write().unwrap().insert((cell.0 + view.y as i32, cell.1 - view.x as i32));
+    fn insert_cell_rel(&mut self, cell: (i32, i32), view: (f64, f64)) {
+        self.cells.write().unwrap().insert((cell.0 + view.1.floor() as i32, cell.1 - view.0.floor() as i32));
     }
 
     fn collect_cells(&self) -> Vec<(i32, i32)> {

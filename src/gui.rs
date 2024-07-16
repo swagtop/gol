@@ -17,11 +17,11 @@ pub fn run_gui() {
 struct Model {
     _window: window::Id,
     state: Box<dyn crate::state::State>,
-    view: Vec2,
-    last_view: Vec2,
+    view: (f64, f64),
+    last_view: (f64, f64),
     cursor_location: Vec2,
     cursor_cell: (i32, i32),
-    scale: f32,
+    scale: f64,
     clicked: bool,
     show_stats: bool,
     dark_mode: bool,
@@ -39,11 +39,11 @@ fn model(app: &App) -> Model {
         .build()
         .unwrap();
 
-    let view: Vec2 = (0.0, 0.0).into();
-    let last_view: Vec2 = view.clone();
+    let view: (f64, f64) = (0.0, 0.0).into();
+    let last_view: (f64, f64) = view.clone();
     let cursor_location: Vec2 = (0.0, 0.0).into();
     let cursor_cell: (i32, i32) = (0, 0);
-    let scale: f32 = 10.0;
+    let scale: f64 = 10.0;
     let clicked: bool = false;
     let show_stats: bool = false;
     let dark_mode: bool = true;
@@ -81,11 +81,11 @@ fn model(app: &App) -> Model {
 }
     
 fn update_cursor_cell(model: &mut Model) -> () {
-    let (x, y) = (model.cursor_location.x, model.cursor_location.y);
-    let (x, y) = (x / model.scale, -y / model.scale);
+    let (x, y) = (model.cursor_location.x as f64, model.cursor_location.y as f64);
+    let (x, y) = (x / model.scale  as f64, -y / model.scale as f64);
     let (x, y) = (x - 0.5, y - 0.5);
     let (x, y) = (x, y + 1.0);
-    let (x, y) = (x - model.view.x, y - model.view.y);
+    let (x, y) = (x - model.view.0, y - model.view.1);
     model.cursor_cell = (x.floor() as i32 + 1, y.floor() as i32);
 }
 
@@ -114,14 +114,13 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
                         model.view = (0.0, 0.0).into();
                         update_cursor_cell(model);
                     }
-                    Some(A) => model.view = (-100000.0, 1000000.0).into(),
+                    Some(A) => model.view = (0b01111111111111111111111111111110i32 as f64, 0b01111111111111111111111111111110i32 as f64),
                     Some(J) => {
                         model.last_view = model.view.clone();
                         let cells: Vec<(i32, i32)> =
                             model.state.collect_cells();
                         let random_cell = cells[random_range(0, cells.len())];
-                        (model.view.x, model.view.y) =
-                            (-random_cell.1 as f32, random_cell.0 as f32);
+                        model.view = (-random_cell.1 as f64, random_cell.0 as f64);
                         update_cursor_cell(model);
                     }
                     Some(Z) => {
@@ -182,7 +181,7 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
             delta: MouseScrollDelta::LineDelta(_, y),
             ..
         } => {
-            let new_scale = model.scale + y;
+            let new_scale = model.scale + *y as f64;
             if new_scale > 1.0 && new_scale < 30.0 {
                 model.scale = new_scale
             }
@@ -201,8 +200,16 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
 fn update(app: &App, model: &mut Model, _update: Update) {
     // Move view when clicked.
     if model.clicked && !model.drawing {
-        model.view.x -= app.mouse.x / 100.0 / model.scale;
-        model.view.y -= app.mouse.y / 100.0 / model.scale;
+        model.view.0 -= app.mouse.x as f64 / 100.0 / model.scale;
+        model.view.1 -= app.mouse.y as f64 / 100.0 / model.scale;
+
+        if model.view.0 < -2147483647.0 || model.view.0 > 2147483647.0 {
+            model.view.0 *= -1.0;
+        }
+        if model.view.1 < -2147483647.0 || model.view.1 > 2147483647.0 {
+            model.view.1 *= -1.0;
+        }
+
         update_cursor_cell(model);
     }
 
@@ -225,12 +232,12 @@ fn view(app: &App, model: &Model, frame: Frame) {
     let cells = model.state.collect_cells();
     let corner = Rect::from_w_h(0.0, 0.0).top_left_of(frame.rect());
     let (screen_left, screen_right) = (
-        ((corner.x()) / model.scale + model.view.x) as i32 - 2, 
-        ((corner.x() + frame.rect().w()) / model.scale + (model.view.x)) as i32 + 2
+        ((corner.x() as f64) / model.scale + model.view.0) as i32 - 2, 
+        ((corner.x() + frame.rect().w()) as f64 / model.scale + (model.view.0)) as i32 + 2
     );
     let (screen_top, screen_bottom) = (
-        (((corner.y()) / model.scale + (model.view.y))) as i32 + 2,
-        ((corner.y() - frame.rect().h()) / model.scale + (model.view.y)) as i32 - 2
+        (((corner.y() as f64) / model.scale + (model.view.1))) as i32 + 2,
+        ((corner.y() - frame.rect().h()) as f64 / model.scale + (model.view.1)) as i32 - 2
     );
 
     let mut rendered = 0;
@@ -239,8 +246,8 @@ fn view(app: &App, model: &Model, frame: Frame) {
         if cell.0 > screen_bottom && cell.0 < screen_top &&
             -cell.1 > screen_left && -cell.1 < screen_right {
             
-            let coordinates: Vec2 = (cell.1 as f32 + model.view.x - 0.5, -cell.0 as f32 + model.view.y).into();
-            draw.scale(model.scale)
+            let coordinates: Vec2 = ((cell.1 as f64 + model.view.0 - 0.5) as f32, (-cell.0 as f64 + model.view.1) as f32).into();
+            draw.scale(model.scale as f32)
                 .line()
                 .weight(1.0)
                 .start((coordinates.x + 1.0, coordinates.y).into())
@@ -251,7 +258,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
         }
     }
 
-    let coordinates = format!("{}, {}", (-model.view.x) as i32, (-model.view.y) as i32);
+    let coordinates = format!("{}, {}", (-model.view.0) as i32, (-model.view.1) as i32);
 
     if model.hovering_file {
         let points: [((_, _), _); 5] = [
@@ -268,8 +275,9 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     let (x, y) = model.cursor_cell.into();
     let (cursor_x, cursor_y) = {
-        (x as f32 + model.view.x - 0.5, y as f32 + model.view.y - 0.5)
+        (x as f64 + model.view.0 - 0.5, y as f64 + model.view.1 - 0.5)
     };
+    let (cursor_x, cursor_y) = (cursor_x as f32, cursor_y as f32);
     if model.drawing {
         let cell_color_points: [((_, _), _); 6] = [
             ((cursor_x, cursor_y), cell_color),
@@ -279,7 +287,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
             ((cursor_x, cursor_y), cell_color),
             ((cursor_x, cursor_y + 1.0), cell_color),
         ];
-        draw.scale(model.scale)
+        draw.scale(model.scale as f32)
             .polyline()
             .weight(0.1 + (app.time * 2.5).sin().abs() / 15.0)
             .points_colored(cell_color_points);

@@ -1,5 +1,4 @@
 use fxhash::FxHashSet as HashSet;
-use nannou::prelude::Vec2;
 use std::thread;
 use crate::parallel;
 use crate::single;
@@ -7,9 +6,9 @@ use crate::single;
 pub trait State {
     fn tick(&mut self);
     fn insert_cells(&mut self, cells: Vec<(i32, i32)>);
-    fn insert_cells_rel(&mut self, cells: Vec<(i32, i32)>, view: Vec2);
+    fn insert_cells_rel(&mut self, cells: Vec<(i32, i32)>, view: (f64, f64));
     fn insert_cell(&mut self, cell: (i32, i32));
-    fn insert_cell_rel(&mut self, cell: (i32, i32), view: Vec2);
+    fn insert_cell_rel(&mut self, cell: (i32, i32), view: (f64, f64));
     fn collect_cells(&self) -> Vec<(i32, i32)>;
     fn count_cells(&self) -> usize;
     fn generation(&self) -> usize;
@@ -25,8 +24,8 @@ pub fn state() -> Box<dyn State> {
 // Returns arrays of the coordinates of the neighbors of the cells coordinates given.
 pub fn get_neighbors(coordinates: &(i32, i32)) -> [(i32, i32); 8] {
     let (x, y) = *coordinates;
-    let (x_left, x_right) = (x.overflowing_sub(1).0, x.overflowing_add(1).0);
-    let (y_up, y_down) = (y.overflowing_sub(1).0, y.overflowing_add(1).0);
+    let (x_left, x_right) = (x - 1, x + 1);
+    let (y_up, y_down) = (y - 1, y + 1);
 
     [
         (x_left, y_up),
