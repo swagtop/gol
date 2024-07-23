@@ -248,13 +248,13 @@ fn view(app: &App, model: &Model, frame: Frame) {
         if cell.0 > screen_bottom && cell.0 < screen_top &&
             -cell.1 > screen_left && -cell.1 < screen_right {
             
-            let one = [(cell.1 as f64 + model.view.0 - 0.5) as f32, (-cell.0 as f64 + model.view.1 - 0.5) as f32, 0.0];
-            let two = [one[0] + 1.0, one[1], 0.0];
-            let three = [one[0] + 1.0, one[1] + 1.0, 0.0];
+            let one = ([(cell.1 as f64 + model.view.0 - 0.5) as f32, (-cell.0 as f64 + model.view.1 - 0.5) as f32, 0.0], cell_color);
+            let two = ([one.0[0] + 1.0, one.0[1], 0.0], cell_color);
+            let three = ([one.0[0] + 1.0, one.0[1] + 1.0, 0.0], cell_color);
 
             let first_tri = nannou::prelude::geom::Tri([one, two, three]);
 
-            let two = [one[0], one[1] + 1.0, 0.0];
+            let two = ([one.0[0], one.0[1] + 1.0, 0.0], cell_color);
 
             let second_tri = nannou::prelude::geom::Tri([one, two, three]);
             
@@ -267,7 +267,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     draw.scale(model.scale as f32)
         .mesh()
-        .tris(cell_tris);
+        .tris_colored(cell_tris);
 
     let coordinates = format!("{}, {}", (-model.view.0) as i32, (-model.view.1) as i32);
 
