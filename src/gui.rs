@@ -242,21 +242,32 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     let mut rendered = 0;
     draw.background().color(background_color);
+    let mut cell_tris = Vec::default();
+    
     for cell in &cells {
         if cell.0 > screen_bottom && cell.0 < screen_top &&
             -cell.1 > screen_left && -cell.1 < screen_right {
             
-            let coordinates: Vec2 = ((cell.1 as f64 + model.view.0 - 0.5) as f32, (-cell.0 as f64 + model.view.1) as f32).into();
-            draw.scale(model.scale as f32)
-                .line()
-                .weight(1.0)
-                .start((coordinates.x + 1.0, coordinates.y).into())
-                .end(coordinates)
-                .color(cell_color);
+            let one = [(cell.1 as f64 + model.view.0 - 0.5) as f32, (-cell.0 as f64 + model.view.1 - 0.5) as f32, 0.0];
+            let two = [one[0] + 1.0, one[1], 0.0];
+            let three = [one[0] + 1.0, one[1] + 1.0, 0.0];
+
+            let first_tri = nannou::prelude::geom::Tri([one, two, three]);
+
+            let two = [one[0], one[1] + 1.0, 0.0];
+
+            let second_tri = nannou::prelude::geom::Tri([one, two, three]);
             
-                rendered += 1;
+            cell_tris.push(first_tri);
+            cell_tris.push(second_tri);
+
+            rendered += 1;
         }
     }
+
+    draw.scale(model.scale as f32)
+        .mesh()
+        .tris(cell_tris);
 
     let coordinates = format!("{}, {}", (-model.view.0) as i32, (-model.view.1) as i32);
 
