@@ -145,7 +145,10 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
         }
         WinitEvent::CursorMoved { position, .. } => {
             let (frame_x, frame_y) = (app.window_rect().w() / 2.0, app.window_rect().h() / 2.0);
-            let (x, y) = (position.x as f32 - frame_x, position.y as f32 - frame_y);
+            let (x, y) = (
+                (position.x as f32 / app.main_window().scale_factor()) - frame_x, 
+                (position.y as f32 / app.main_window().scale_factor()) - frame_y
+            );
             model.cursor_location = (x, y).into();
             update_cursor_cell(model);
 
