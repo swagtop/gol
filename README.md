@@ -49,6 +49,5 @@ As you can see FxHashSet was almost 2.5 times faster than the standard HashSet i
 
 1. Add UI with options for user to choose on start
 2. Add options to control update speed
-3. Optimize rendering by rendering cells as a single mesh (Main bottleneck for large number of cells)
-4. Add piping options such that ascii setups, or lists of cell coordinates can be piped into and out of gol
+3. Add piping options such that ascii setups, or lists of cell coordinates can be piped into and out of gol
 
