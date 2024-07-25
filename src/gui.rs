@@ -230,7 +230,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     let (cell_color, background_color) = {
         let black = Rgb::from_components((0.0, 0.0, 0.0)); 
-        let white = Rgb::from_components((100000.0, 100000.0, 100000.0)); 
+        let white = Rgb::from_components((1.0, 1.0, 1.0)); 
         match model.dark_mode {
             true => (white, black),
             _ => (black, white),
