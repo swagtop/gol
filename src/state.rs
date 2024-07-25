@@ -2,6 +2,9 @@ use fxhash::FxHashSet as HashSet;
 use std::thread;
 use crate::parallel;
 use crate::single;
+use nannou::prelude::geom::Tri;
+use nannou::color::Rgb;
+use nannou::color::Srgb;
 
 pub trait State {
     fn tick(&mut self);
@@ -12,6 +15,15 @@ pub trait State {
     fn collect_cells(&self) -> Vec<(i32, i32)>;
     fn count_cells(&self) -> usize;
     fn generation(&self) -> usize;
+    fn get_tris(
+        &self, 
+        view: (f64, f64), 
+        cell_color: nannou::prelude::rgb::Rgb,
+        screen_left: i32,
+        screen_right: i32,
+        screen_top: i32,
+        screen_bottom: i32
+    ) -> (Vec<Tri<([f32; 3], nannou::prelude::rgb::Rgb)>>, usize);
 }
 
 pub fn state() -> Box<dyn State> {

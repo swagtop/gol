@@ -9,6 +9,8 @@ use nannou::winit::event::ElementState::{Pressed, Released};
 use nannou::winit::event::WindowEvent as WinitEvent;
 use std::time::{Duration, Instant};
 use crate::file;
+use nannou::color::Srgb;
+use nannou::color::Rgb;
 
 pub fn run_gui() {
     nannou::app(model).update(update).run();
@@ -227,9 +229,11 @@ fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
 
     let (cell_color, background_color) = {
+        let black = Rgb::from_components((0.0, 0.0, 0.0)); 
+        let white = Rgb::from_components((100000.0, 100000.0, 100000.0)); 
         match model.dark_mode {
-            true => (WHITE, BLACK),
-            _ => (BLACK, WHITE),
+            true => (white, black),
+            _ => (black, white),
     }};
 
     let cells = model.state.collect_cells();
@@ -245,8 +249,16 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     let mut rendered = 0;
     draw.background().color(background_color);
-    let mut cell_tris = Vec::default();
-    
+
+    let (cell_tris, rendered) = model.state.get_tris(
+        model.view,
+        cell_color,
+        screen_left,
+        screen_right,
+        screen_top,
+        screen_bottom,
+    );
+    /*
     for cell in &cells {
         if cell.0 > screen_bottom && cell.0 < screen_top &&
             -cell.1 > screen_left && -cell.1 < screen_right {
@@ -267,7 +279,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
             rendered += 1;
         }
     }
-
+    */
     draw.scale(model.scale as f32)
         .mesh()
         .tris_colored(cell_tris);

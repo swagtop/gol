@@ -1,5 +1,8 @@
 use fxhash::FxHashSet as HashSet;
 use crate::state::*;
+use nannou::prelude::geom::Tri;
+use nannou::color::Rgb;
+use nannou::color::Srgb;
 
 pub struct SingleState {
     cells: HashSet<(i32, i32)>,
@@ -95,5 +98,39 @@ impl State for SingleState {
     
     fn generation(&self) -> usize {
         self.generation
+    }
+    
+    fn get_tris(
+        &self, 
+        view: (f64, f64), 
+        cell_color: nannou::prelude::rgb::Rgb,
+        screen_left: i32,
+        screen_right: i32,
+        screen_top: i32,
+        screen_bottom: i32
+    ) -> (Vec<Tri<([f32; 3], nannou::prelude::rgb::Rgb)>>, usize) {
+        let mut tri_list = Vec::default();
+
+        for cell in self.cells.iter() {
+            if cell.0 > screen_bottom && cell.0 < screen_top &&
+                -cell.1 > screen_left && -cell.1 < screen_right {
+                
+                let one = ([(cell.1 as f64 + view.0 - 0.5) as f32, (-cell.0 as f64 + view.1 - 0.5) as f32, 0.0], cell_color);
+                let two = ([one.0[0] + 1.0, one.0[1], 0.0], cell_color);
+                let three = ([one.0[0] + 1.0, one.0[1] + 1.0, 0.0], cell_color);
+
+                let first_tri = nannou::prelude::geom::Tri([one, two, three]);
+
+                let two = ([one.0[0], one.0[1] + 1.0, 0.0], cell_color);
+
+                let second_tri = nannou::prelude::geom::Tri([one, two, three]);
+                
+                tri_list.push(first_tri);
+                tri_list.push(second_tri);
+            }
+        }
+
+        let rendered = tri_list.len() / 2;
+        (tri_list, rendered)
     }
 }
