@@ -13,6 +13,7 @@ pub struct ParallelState {
     kill_lists: Arc<Vec<Mutex<Vec<(i32, i32)>>>>,
     res_lists: Arc<Vec<Mutex<Vec<(i32, i32)>>>>,
     tri_lists: Arc<Vec<Mutex<LinkedList<Tri<([f32; 3], Rgb)>>>>>,
+    cells_vec: Arc<RwLock<Vec<(i32, i32)>>>,
     workers: ThreadPool,
     generation: usize,
 }
@@ -39,6 +40,8 @@ pub fn parallel_state() -> ParallelState {
             .map(|_| Mutex::new(LinkedList::new()))
             .collect::<Vec<_>>(),
     );
+
+    let cells_vec = Arc::new(RwLock::new(Vec::default()));
     
     let workers = ThreadPool::new(
         thread::available_parallelism().unwrap().get() - 1
@@ -52,6 +55,7 @@ pub fn parallel_state() -> ParallelState {
         kill_lists,
         res_lists,
         tri_lists,
+        cells_vec,
         workers,
         generation,
     }
@@ -209,14 +213,14 @@ impl State for ParallelState {
         screen_top: i32,
         screen_bottom: i32
     ) -> (LinkedList<Tri<([f32; 3], nannou::prelude::rgb::Rgb)>>, usize) {
-        let cells_vec = Arc::new(RwLock::new(self.cells.read().unwrap().iter().copied().collect::<Vec<_>>()));
-        let cell_amount = cells_vec.read().unwrap().len();
+        self.cells_vec.write().unwrap().extend(self.cells.read().unwrap().iter().filter(|cell| cell.0 > screen_bottom && cell.0 < screen_top && -cell.1 > screen_left && -cell.1 < screen_right).copied());
+        let cell_amount = self.cells_vec.read().unwrap().len();
         let thread_distribution = Arc::new((cell_amount / self.thread_amount) as usize);
 
         // Worker threads
         for thread_number in 0..self.thread_amount - 1 {
             //println!("{}", self.workers.active_count());
-            let thread_cells = Arc::clone(&cells_vec);
+            let thread_cells = Arc::clone(&self.cells_vec);
             let thread_tri_lists = Arc::clone(&self.tri_lists);
             let this_thread_distribution = Arc::clone(&thread_distribution);
 
@@ -226,44 +230,6 @@ impl State for ParallelState {
                 let mut tri_list = thread_tri_lists[thread_number].lock().unwrap();
                 
                 for cell in slice {
-                    if cell.0 > screen_bottom && cell.0 < screen_top &&
-                        -cell.1 > screen_left && -cell.1 < screen_right {
-                        
-                        let point = [(cell.1 as f64 + view.0 - 0.5) as f32, (-cell.0 as f64 + view.1 - 0.5) as f32];
-
-                        let first_tri = nannou::prelude::geom::Tri([
-                            ([point[0], point[1], 0.0], cell_color),
-                            ([point[0] + 1.0, point[1], 0.0], cell_color),
-                            ([point[0] + 1.0, point[1] + 1.0, 0.0], cell_color)
-                        ]);
-
-                        let second_tri = nannou::prelude::geom::Tri([
-                            first_tri[0], 
-                            ([point[0], point[1] + 1.0, 0.0], cell_color), 
-                            first_tri[2]
-                        ]);
-                        
-                        tri_list.push_front(first_tri);
-                        tri_list.push_front(second_tri);
-                    }
-                }
-            });
-        }
-
-        // Main thread
-        {
-            let thread_cells = &cells_vec;
-            let thread_tri_lists = &self.tri_lists;
-            
-            let slice_start = (self.thread_amount - 1) * *thread_distribution;
-            let slice = &thread_cells.read().unwrap()[slice_start .. thread_cells.read().unwrap().len()];
-
-            let mut tri_list = thread_tri_lists[self.thread_amount - 1].lock().unwrap();
-            
-            for cell in slice {
-                if cell.0 > screen_bottom && cell.0 < screen_top &&
-                    -cell.1 > screen_left && -cell.1 < screen_right {
-                    
                     let point = [(cell.1 as f64 + view.0 - 0.5) as f32, (-cell.0 as f64 + view.1 - 0.5) as f32];
 
                     let first_tri = nannou::prelude::geom::Tri([
@@ -281,6 +247,36 @@ impl State for ParallelState {
                     tri_list.push_front(first_tri);
                     tri_list.push_front(second_tri);
                 }
+            });
+        }
+
+        // Main thread
+        {
+            let thread_cells = &self.cells_vec;
+            let thread_tri_lists = &self.tri_lists;
+            
+            let slice_start = (self.thread_amount - 1) * *thread_distribution;
+            let slice = &thread_cells.read().unwrap()[slice_start .. thread_cells.read().unwrap().len()];
+
+            let mut tri_list = thread_tri_lists[self.thread_amount - 1].lock().unwrap();
+            
+            for cell in slice {
+                let point = [(cell.1 as f64 + view.0 - 0.5) as f32, (-cell.0 as f64 + view.1 - 0.5) as f32];
+
+                let first_tri = nannou::prelude::geom::Tri([
+                    ([point[0], point[1], 0.0], cell_color),
+                    ([point[0] + 1.0, point[1], 0.0], cell_color),
+                    ([point[0] + 1.0, point[1] + 1.0, 0.0], cell_color)
+                ]);
+
+                let second_tri = nannou::prelude::geom::Tri([
+                    first_tri[0], 
+                    ([point[0], point[1] + 1.0, 0.0], cell_color), 
+                    first_tri[2]
+                ]);
+                
+                tri_list.push_front(first_tri);
+                tri_list.push_front(second_tri);
             }
         }
             
@@ -291,6 +287,8 @@ impl State for ParallelState {
             let tri_list = &mut tri_list.lock().unwrap();
             tris.append(tri_list);
         }
+        
+        self.cells_vec.write().expect("").clear();
         
         let rendered = tris.len() / 2;
         (tris, rendered)

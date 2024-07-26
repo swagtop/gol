@@ -7,8 +7,8 @@ use nannou::window;
 use nannou::winit::event::ElementState::{Pressed, Released};
 use nannou::winit::event::WindowEvent as WinitEvent;
 use std::time::{Duration, Instant};
-use crate::file;
 use nannou::color::Rgb;
+use crate::file;
 
 pub fn run_gui() {
     nannou::app(model).update(update).run();
@@ -38,6 +38,8 @@ fn model(app: &App) -> Model {
         .raw_event(raw_window_event)
         .build()
         .unwrap();
+    
+    app.main_window().set_title("gol");
 
     let view: (f64, f64) = (0.0, 0.0).into();
     let last_view: (f64, f64) = view.clone();
