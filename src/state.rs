@@ -3,6 +3,7 @@ use std::thread;
 use crate::parallel;
 use crate::single;
 use nannou::prelude::geom::Tri;
+use std::collections::LinkedList;
 
 pub trait State {
     fn tick(&mut self);
@@ -21,7 +22,7 @@ pub trait State {
         screen_right: i32,
         screen_top: i32,
         screen_bottom: i32
-    ) -> (Vec<Tri<([f32; 3], nannou::prelude::rgb::Rgb)>>, usize);
+    ) -> (LinkedList<Tri<([f32; 3], nannou::prelude::rgb::Rgb)>>, usize);
 }
 
 pub fn state() -> Box<dyn State> {

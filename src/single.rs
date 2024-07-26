@@ -1,6 +1,7 @@
 use fxhash::FxHashSet as HashSet;
 use crate::state::*;
 use nannou::prelude::geom::Tri;
+use std::collections::LinkedList;
 
 pub struct SingleState {
     cells: HashSet<(i32, i32)>,
@@ -106,8 +107,8 @@ impl State for SingleState {
         screen_right: i32,
         screen_top: i32,
         screen_bottom: i32
-    ) -> (Vec<Tri<([f32; 3], nannou::prelude::rgb::Rgb)>>, usize) {
-        let mut tri_list = Vec::default();
+    ) -> (LinkedList<Tri<([f32; 3], nannou::prelude::rgb::Rgb)>>, usize) {
+        let mut tri_list = LinkedList::default();
 
         for cell in self.cells.iter() {
             if cell.0 > screen_bottom && cell.0 < screen_top &&
@@ -123,8 +124,8 @@ impl State for SingleState {
 
                 let second_tri = nannou::prelude::geom::Tri([one, two, three]);
                 
-                tri_list.push(first_tri);
-                tri_list.push(second_tri);
+                tri_list.push_front(first_tri);
+                tri_list.push_front(second_tri);
             }
         }
 

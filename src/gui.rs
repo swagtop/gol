@@ -177,8 +177,6 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
             ..
         } => {
             model.drawing = !model.drawing;
-            //update_cursor_cell(model);
-            //_app.main_window().set_cursor_visible(!model.drawing);
         }
         WinitEvent::MouseWheel {
             delta: MouseScrollDelta::LineDelta(_, y),
@@ -220,6 +218,10 @@ fn update(app: &App, model: &mut Model, _update: Update) {
     if model.last_update.elapsed() >= Duration::from_millis(25) && !model.paused {
         model.state.tick();
         model.last_update = Instant::now();
+
+        if model.drawing && model.clicked {
+            model.state.insert_cell((-model.cursor_cell.1, model.cursor_cell.0));
+        }
     }
 }
 
@@ -232,9 +234,10 @@ fn view(app: &App, model: &Model, frame: Frame) {
         match model.dark_mode {
             true => (white, black),
             _ => (black, white),
-    }};
+        }
+    };
 
-    let cells = model.state.collect_cells();
+    //let cells = model.state.collect_cells();
     let corner = Rect::from_w_h(0.0, 0.0).top_left_of(frame.rect());
     let (screen_left, screen_right) = (
         ((corner.x() as f64) / model.scale + model.view.0) as i32 - 2, 
@@ -247,7 +250,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     draw.background().color(background_color);
 
-    let (cell_tris, rendered) = model.state.get_tris(
+    let (tris, rendered) = model.state.get_tris(
         model.view,
         cell_color,
         screen_left,
@@ -258,9 +261,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     draw.scale(model.scale as f32)
         .mesh()
-        .tris_colored(cell_tris);
-
-    let coordinates = format!("{}, {}", (-model.view.0) as i32, (-model.view.1) as i32);
+        .tris_colored(tris);
 
     if model.hovering_file {
         let points: [((_, _), _); 5] = [
@@ -295,6 +296,9 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .points_colored(cell_color_points);
     }
     
+    let coordinates = format!("{}, {}", (-model.view.0) as i32, (-model.view.1) as i32);
+    let cursor = format!("{}, {}", model.cursor_cell.0, model.cursor_cell.1);
+
     if model.show_stats {
         draw.text("Coordinates:")
             .x(corner.x() + 100.0)
@@ -312,7 +316,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .y(corner.y() - 22.5)
             .color(cell_color)
             .left_justify();
-        draw.text(&format!("{}, {}", model.cursor_cell.0, model.cursor_cell.1))
+        draw.text(&cursor)
             .x(corner.x() + 100.0)
             .y(corner.y() - 32.5)
             .color(cell_color)
@@ -334,7 +338,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .y(corner.y() - 62.5)
             .color(cell_color)
             .left_justify();
-        draw.text(&cells.len().to_string())
+        draw.text(&model.state.count_cells().to_string())
             .x(corner.x() + 100.0)
             .y(corner.y() - 72.5)
             .color(cell_color)
@@ -352,12 +356,12 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .left_justify();
 
         let status = {
-            if model.paused {
-                "Paused"
-            } else {
-                "Running"
+            match model.paused {
+                true => "Paused",
+                _ => "Running"
             }
         };
+
         draw.text(status)
             .x(corner.x() + 100.0)
             .y(corner.y() - 102.5)
