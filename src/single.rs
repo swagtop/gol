@@ -1,8 +1,6 @@
 use fxhash::FxHashSet as HashSet;
 use crate::state::*;
 use nannou::prelude::geom::Tri;
-use nannou::color::Rgb;
-use nannou::color::Srgb;
 
 pub struct SingleState {
     cells: HashSet<(i32, i32)>,

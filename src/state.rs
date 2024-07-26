@@ -3,8 +3,6 @@ use std::thread;
 use crate::parallel;
 use crate::single;
 use nannou::prelude::geom::Tri;
-use nannou::color::Rgb;
-use nannou::color::Srgb;
 
 pub trait State {
     fn tick(&mut self);

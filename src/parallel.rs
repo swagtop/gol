@@ -5,7 +5,6 @@ use fxhash::FxHashSet as HashSet;
 use crate::state::*;
 use nannou::prelude::geom::Tri;
 use nannou::color::Rgb;
-use nannou::color::Srgb;
 
 pub struct ParallelState {
     cells: Arc<RwLock<HashSet<(i32, i32)>>>,
@@ -280,7 +279,7 @@ impl State for ParallelState {
 
         let mut tris = Vec::default();
         for tri_list in self.tri_lists.iter() {
-            let mut tri_list = &mut tri_list.lock().unwrap();
+            let tri_list = &mut tri_list.lock().unwrap();
             tris.append(tri_list);
         }
         

@@ -1,4 +1,3 @@
-use nannou::color::{BLACK, WHITE};
 use nannou::event::Key::*;
 use nannou::prelude::MouseScrollDelta;
 use nannou::prelude::Rect;
@@ -9,7 +8,6 @@ use nannou::winit::event::ElementState::{Pressed, Released};
 use nannou::winit::event::WindowEvent as WinitEvent;
 use std::time::{Duration, Instant};
 use crate::file;
-use nannou::color::Srgb;
 use nannou::color::Rgb;
 
 pub fn run_gui() {
@@ -229,7 +227,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
 
     let (cell_color, background_color) = {
-        let black = Rgb::from_components((0.0, 0.0, 0.0)); 
+        let black = Rgb::from_components((-3.0, -3.0, -3.0)); 
         let white = Rgb::from_components((1.0, 1.0, 1.0)); 
         match model.dark_mode {
             true => (white, black),
@@ -247,7 +245,6 @@ fn view(app: &App, model: &Model, frame: Frame) {
         ((corner.y() - frame.rect().h()) as f64 / model.scale + (model.view.1)) as i32 - 2
     );
 
-    let mut rendered = 0;
     draw.background().color(background_color);
 
     let (cell_tris, rendered) = model.state.get_tris(
@@ -258,28 +255,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
         screen_top,
         screen_bottom,
     );
-    /*
-    for cell in &cells {
-        if cell.0 > screen_bottom && cell.0 < screen_top &&
-            -cell.1 > screen_left && -cell.1 < screen_right {
-            
-            let one = ([(cell.1 as f64 + model.view.0 - 0.5) as f32, (-cell.0 as f64 + model.view.1 - 0.5) as f32, 0.0], cell_color);
-            let two = ([one.0[0] + 1.0, one.0[1], 0.0], cell_color);
-            let three = ([one.0[0] + 1.0, one.0[1] + 1.0, 0.0], cell_color);
 
-            let first_tri = nannou::prelude::geom::Tri([one, two, three]);
-
-            let two = ([one.0[0], one.0[1] + 1.0, 0.0], cell_color);
-
-            let second_tri = nannou::prelude::geom::Tri([one, two, three]);
-            
-            cell_tris.push(first_tri);
-            cell_tris.push(second_tri);
-
-            rendered += 1;
-        }
-    }
-    */
     draw.scale(model.scale as f32)
         .mesh()
         .tris_colored(cell_tris);
