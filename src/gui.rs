@@ -8,10 +8,22 @@ use nannou::winit::event::ElementState::{Pressed, Released};
 use nannou::winit::event::WindowEvent as WinitEvent;
 use std::time::{Duration, Instant};
 use nannou::color::Rgb;
+use std::sync::Mutex;
+use std::io::{self, Write};
 use crate::file;
 
-pub fn run_gui() {
+lazy_static! {
+    static ref START_CELLS: Mutex<Vec<(i32, i32)>> = Mutex::new(Vec::new());
+}
+lazy_static! {
+    static ref END_CELLS: Mutex<Vec<(i32, i32)>> = Mutex::new(Vec::new());
+}
+
+pub fn run_gui(mut start_cells: Vec<(i32, i32)>) -> Vec<(i32, i32)> {
+    START_CELLS.lock().unwrap().append(&mut start_cells);
     nannou::app(model).update(update).run();
+
+    END_CELLS.lock().unwrap().to_vec()
 }
 
 struct Model {
@@ -40,6 +52,7 @@ fn model(app: &App) -> Model {
         .unwrap();
     
     app.main_window().set_title("gol");
+    app.set_exit_on_escape(false);
 
     let view: (f64, f64) = (0.0, 0.0).into();
     let last_view: (f64, f64) = view.clone();
@@ -65,6 +78,7 @@ fn model(app: &App) -> Model {
     }
     state.insert_cells(collection);
     */
+    state.insert_cells(START_CELLS.lock().unwrap().to_vec());
 
     Model {
         _window,
@@ -120,12 +134,14 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
                     }
                     Some(A) => model.view = (0b01111111111111111111111111111110i32 as f64, 0b01111111111111111111111111111110i32 as f64),
                     Some(J) => {
-                        model.last_view = model.view.clone();
-                        let cells: Vec<(i32, i32)> =
-                            model.state.collect_cells();
-                        let random_cell = cells[random_range(0, cells.len())];
-                        model.view = (-random_cell.1 as f64, random_cell.0 as f64);
-                        update_cursor_cell(model);
+                        if model.state.count_cells() != 0 {
+                            model.last_view = model.view.clone();
+                            let cells: Vec<(i32, i32)> =
+                                model.state.collect_cells();
+                            let random_cell = cells[random_range(0, cells.len())];
+                            model.view = (-random_cell.1 as f64, random_cell.0 as f64);
+                            update_cursor_cell(model);
+                        }
                     }
                     Some(Z) => {
                         let current_view = model.view.clone();
@@ -136,6 +152,11 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
                     Some(Space) => model.paused = !model.paused,
                     Some(T) => {
                         model.state.tick();
+                    }
+                    Some(Escape) => {
+                        io::stdout().lock().write_all(&from_cells_to_bytes(model.state.collect_cells()));
+                        io::stdout().flush();
+                        app.quit();
                     }
                     _ => (),
                 }
@@ -226,6 +247,8 @@ fn update(app: &App, model: &mut Model, _update: Update) {
         if model.drawing && model.clicked {
             model.state.insert_cell((-model.cursor_cell.1, model.cursor_cell.0));
         }
+
+        END_CELLS.lock().unwrap().append(&mut model.state.collect_cells());
     }
 }
 
@@ -374,4 +397,24 @@ fn view(app: &App, model: &Model, frame: Frame) {
     }
 
     draw.to_frame(app, &frame).unwrap();
+}
+
+fn from_cells_to_bytes(collection: Vec<(i32, i32)>) -> Vec<u8> {
+    let mut bytes = Vec::default();
+
+    for cell in collection {
+        let x_bytes = cell.0.to_ne_bytes();
+        bytes.push(x_bytes[0]);
+        bytes.push(x_bytes[1]);
+        bytes.push(x_bytes[2]);
+        bytes.push(x_bytes[3]);
+        
+        let y_bytes = cell.1.to_ne_bytes();
+        bytes.push(y_bytes[0]);
+        bytes.push(y_bytes[1]);
+        bytes.push(y_bytes[2]);
+        bytes.push(y_bytes[3]);
+    }
+
+    bytes
 }

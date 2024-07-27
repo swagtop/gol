@@ -701,6 +701,7 @@ name = "gol"
 version = "1.0.0"
 dependencies = [
  "fxhash",
+ "lazy_static",
  "nannou",
  "threadpool",
 ]
