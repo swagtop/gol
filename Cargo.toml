@@ -14,10 +14,11 @@ threadpool = "1.8.1"
 name = "gol"
 path = "src/main.rs"
 
-[profile.release]
-overflow-checks = false
-debug = true
-
 [profile.dev]
 overflow-checks = false
+
+[profile.release]
+overflow-checks = false
+debug = false
+lto = "fat"
 

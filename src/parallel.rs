@@ -140,12 +140,12 @@ impl State for ParallelState {
             }
         }
             
+        self.generation += 1;
+
         self.workers.join();
 
-        let mut cells = self.cells.write().unwrap();
-        if !cells.is_empty() {
-            self.generation += 1;
-        }
+        let mut cells = self.cells.write().unwrap();        
+
         for kill_list in self.kill_lists.iter() {
             let mut kill_list = kill_list.lock().unwrap();
             for cell in kill_list.iter() {

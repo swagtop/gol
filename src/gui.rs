@@ -56,6 +56,7 @@ fn model(app: &App) -> Model {
     let mut state = crate::state::state();
 
     // Spawn random amount of cells in random position within range.
+    /*
     let cell_amount = random_range(250000, 500000);
     let mut collection = Vec::default();
     for _ in 0..cell_amount {
@@ -63,6 +64,7 @@ fn model(app: &App) -> Model {
         collection.push(cell);
     }
     state.insert_cells(collection);
+    */
 
     Model {
         _window,
@@ -217,7 +219,7 @@ fn update(app: &App, model: &mut Model, _update: Update) {
     }
 
     // Update cells if enough time has passed.
-    if model.last_update.elapsed() >= Duration::from_millis(25) && !model.paused {
+    if model.last_update.elapsed() >= Duration::from_millis(25) && !model.paused && model.state.count_cells() != 0 {
         model.state.tick();
         model.last_update = Instant::now();
 

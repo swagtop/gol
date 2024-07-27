@@ -110,23 +110,23 @@ impl State for SingleState {
     ) -> (LinkedList<Tri<([f32; 3], nannou::prelude::rgb::Rgb)>>, usize) {
         let mut tri_list = LinkedList::default();
 
-        for cell in self.cells.iter() {
-            if cell.0 > screen_bottom && cell.0 < screen_top &&
-                -cell.1 > screen_left && -cell.1 < screen_right {
-                
-                let one = ([(cell.1 as f64 + view.0 - 0.5) as f32, (-cell.0 as f64 + view.1 - 0.5) as f32, 0.0], cell_color);
-                let two = ([one.0[0] + 1.0, one.0[1], 0.0], cell_color);
-                let three = ([one.0[0] + 1.0, one.0[1] + 1.0, 0.0], cell_color);
+        for cell in self.cells.iter().filter(|cell| cell.0 > screen_bottom && cell.0 < screen_top && -cell.1 > screen_left && -cell.1 < screen_right) {
+            let point = [(cell.1 as f64 + view.0 - 0.5) as f32, (-cell.0 as f64 + view.1 - 0.5) as f32];
 
-                let first_tri = nannou::prelude::geom::Tri([one, two, three]);
+            let first_tri = nannou::prelude::geom::Tri([
+                ([point[0], point[1], 0.0], cell_color),
+                ([point[0] + 1.0, point[1], 0.0], cell_color),
+                ([point[0] + 1.0, point[1] + 1.0, 0.0], cell_color)
+            ]);
 
-                let two = ([one.0[0], one.0[1] + 1.0, 0.0], cell_color);
-
-                let second_tri = nannou::prelude::geom::Tri([one, two, three]);
-                
-                tri_list.push_front(first_tri);
-                tri_list.push_front(second_tri);
-            }
+            let second_tri = nannou::prelude::geom::Tri([
+                first_tri[0], 
+                ([point[0], point[1] + 1.0, 0.0], cell_color), 
+                first_tri[2]
+            ]);
+            
+            tri_list.push_front(first_tri);
+            tri_list.push_front(second_tri);
         }
 
         let rendered = tri_list.len() / 2;
