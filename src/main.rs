@@ -146,18 +146,20 @@ fn from_bytes_to_cells(bytes: Vec<u8>) -> Vec<(i32, i32)> {
 
     if cell_amount > 0 {
         for i in 0..cell_amount {
-            let cell_x = i32::from_ne_bytes([
-                bytes[i], 
-                bytes[i+1], 
-                bytes[i+2], 
+            let i = i * 8;
+
+            let cell_x = i32::from_le_bytes([
                 bytes[i+3],
+                bytes[i+2], 
+                bytes[i+1], 
+                bytes[i], 
             ]);
 
-            let cell_y = i32::from_ne_bytes([
-                bytes[i+4], 
-                bytes[i+5], 
-                bytes[i+6], 
+            let cell_y = i32::from_le_bytes([
                 bytes[i+7],
+                bytes[i+6], 
+                bytes[i+5], 
+                bytes[i+4], 
             ]);
 
             collection.push((cell_x, cell_y));
@@ -171,17 +173,17 @@ fn from_cells_to_bytes(collection: Vec<(i32, i32)>) -> Vec<u8> {
     let mut bytes = Vec::default();
 
     for cell in collection {
-        let x_bytes = cell.0.to_ne_bytes();
-        bytes.push(x_bytes[0]);
-        bytes.push(x_bytes[1]);
-        bytes.push(x_bytes[2]);
+        let x_bytes = cell.0.to_le_bytes();
         bytes.push(x_bytes[3]);
+        bytes.push(x_bytes[2]);
+        bytes.push(x_bytes[1]);
+        bytes.push(x_bytes[0]);
         
-        let y_bytes = cell.1.to_ne_bytes();
-        bytes.push(y_bytes[0]);
-        bytes.push(y_bytes[1]);
-        bytes.push(y_bytes[2]);
+        let y_bytes = cell.1.to_le_bytes();
         bytes.push(y_bytes[3]);
+        bytes.push(y_bytes[2]);
+        bytes.push(y_bytes[1]);
+        bytes.push(y_bytes[0]);
     }
 
     bytes
