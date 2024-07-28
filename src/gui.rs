@@ -15,15 +15,10 @@ use crate::file;
 lazy_static! {
     static ref START_CELLS: Mutex<Vec<(i32, i32)>> = Mutex::new(Vec::new());
 }
-lazy_static! {
-    static ref END_CELLS: Mutex<Vec<(i32, i32)>> = Mutex::new(Vec::new());
-}
 
-pub fn run_gui(mut start_cells: Vec<(i32, i32)>) -> Vec<(i32, i32)> {
+pub fn run_gui(mut start_cells: Vec<(i32, i32)>) {
     START_CELLS.lock().unwrap().append(&mut start_cells);
     nannou::app(model).update(update).run();
-
-    END_CELLS.lock().unwrap().to_vec()
 }
 
 struct Model {
@@ -154,8 +149,7 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
                         model.state.tick();
                     }
                     Some(Escape) => {
-                        io::stdout().lock().write_all(&from_cells_to_bytes(model.state.collect_cells()));
-                        io::stdout().flush();
+                        let _ = io::stdout().lock().write_all(&from_cells_to_bytes(model.state.collect_cells()));
                         app.quit();
                     }
                     _ => (),
@@ -247,9 +241,7 @@ fn update(app: &App, model: &mut Model, _update: Update) {
         if model.drawing && model.clicked {
             model.state.insert_cell((-model.cursor_cell.1, model.cursor_cell.0));
         }
-
-        END_CELLS.lock().unwrap().append(&mut model.state.collect_cells());
-    }
+   }
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
@@ -304,9 +296,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
     }
 
     let (x, y) = model.cursor_cell.into();
-    let (cursor_x, cursor_y) = {
-        (x as f64 + model.view.0 - 0.5, y as f64 + model.view.1 - 0.5)
-    };
+    let (cursor_x, cursor_y) = (x as f64 + model.view.0 - 0.5, y as f64 + model.view.1 - 0.5);
     let (cursor_x, cursor_y) = (cursor_x as f32, cursor_y as f32);
     if model.drawing {
         let cell_color_points: [((_, _), _); 6] = [

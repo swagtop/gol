@@ -1,6 +1,6 @@
 use std::env;
 use std::thread;
-use std::io::{self, Read, Write};
+use std::io::{self, Read};
 use std::time::Instant;
 use nannou::rand::random_range;
 
@@ -17,39 +17,26 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let mut start_cells: Vec<(i32, i32)> = Vec::default();
 
-    eprintln!("{:?}: {:?}", (255, 255), from_cells_to_bytes(vec![(255, 255)]));
-    eprintln!("{:?}: {:?}", (256, 256), from_cells_to_bytes(vec![(256, 256)]));
-    
-    eprintln!("{:?}: {:?}", (0, 0, 0, 255, 0, 0, 0, 255), from_bytes_to_cells(vec![0u8, 0u8, 0u8, 255u8, 0u8, 0u8, 0u8, 255u8]));
-    eprintln!("{:?}: {:?}", (0, 0, 1, 0, 0, 0, 1, 0), from_bytes_to_cells(vec![0u8, 0u8, 1u8, 0u8, 0u8, 0u8, 1u8, 0u8]));
-
     // Run benchmark if arg is given.
     if args.len() != 1 {
         match args[1].as_str() {
-            "benchmark" | "--benchmark" | "-b" => { run_benchmark(); }
-            "help" | "--help" | "-h" => { print_help(); }
-            "version" | "--version" | "-v" => { println!("gol version 1.0.0"); }
-            "file" => { gui::run_gui(start_cells); },
+            "benchmark" | "--benchmark" | "-b" => { run_benchmark(); return; }
+            "help" | "--help" | "-h" => { print_help(); return; }
+            "version" | "--version" | "-v" => { println!("gol version 1.0.0"); return; }
             "-fb" => {
                 let mut buffer = Vec::new();
                 let _ = io::stdin().read_to_end(&mut buffer);
                 start_cells.append(&mut from_bytes_to_cells(buffer));
-                gui::run_gui(start_cells);
             }
             "-fbtb" => {
                 let mut buffer = Vec::new();
                 let _ = io::stdin().read_to_end(&mut buffer);
                 start_cells.append(&mut from_bytes_to_cells(buffer));
-                let end_cells = gui::run_gui(start_cells);
-                io::stdout().lock().write_all(&from_cells_to_bytes(end_cells));
             }
             "-tb" => {
-                let end_cells = gui::run_gui(start_cells);
-                io::stdout().lock().write_all(&from_cells_to_bytes(end_cells));
             }
             _ => ()
         }
-        return;
     }
 
     gui::run_gui(start_cells);
@@ -140,8 +127,6 @@ fn print_help() {
 
 fn from_bytes_to_cells(bytes: Vec<u8>) -> Vec<(i32, i32)> {
     let cell_amount = (bytes.len() - (bytes.len() % 8)) / 8;
-    eprintln!("cell amt: {}", cell_amount);
-    eprintln!("bytes len: {}", bytes.len());
     let mut collection = Vec::default();
 
     if cell_amount > 0 {
@@ -167,26 +152,6 @@ fn from_bytes_to_cells(bytes: Vec<u8>) -> Vec<(i32, i32)> {
     }
 
     collection
-}
-
-fn from_cells_to_bytes(collection: Vec<(i32, i32)>) -> Vec<u8> {
-    let mut bytes = Vec::default();
-
-    for cell in collection {
-        let x_bytes = cell.0.to_le_bytes();
-        bytes.push(x_bytes[3]);
-        bytes.push(x_bytes[2]);
-        bytes.push(x_bytes[1]);
-        bytes.push(x_bytes[0]);
-        
-        let y_bytes = cell.1.to_le_bytes();
-        bytes.push(y_bytes[3]);
-        bytes.push(y_bytes[2]);
-        bytes.push(y_bytes[1]);
-        bytes.push(y_bytes[0]);
-    }
-
-    bytes
 }
 
 //
