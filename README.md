@@ -34,9 +34,25 @@ You can also drag and drop files into the game window ([unless you are on Waylan
 
 You can pipe cell configurations in and out of gol by using the `-fb` (from bytes), `-tb` (to bytes), or both `-fbtb`. Each cell is encoded as 8 bytes in little endian.
 
-You can start the program in GUI mode and pipe the result of whatever you've drawn into a file by starting gol like so: `gol -tb > cells_in_file`. You can then load the file into gol to get the same configuration back: `cat cells_in_file | gol -fb` (if you are using powershell cat will not do, and you will have to load the file like so: `[System.IO.File]::ReadAllBytes('cells_in_file') | gol.exe -fb`)
+You can start the program in GUI mode and pipe the result of whatever you've drawn into a file by starting gol like so: 
+```bash
+gol -tb > cells_in_file
+``` 
+You can then load the file into gol to get the same configuration back: 
+```bash
+cat cells_in_file | gol -fb
+```
+If you are using powershell, cat will mangle the bytes and will not work. You will have to load the file like so: 
+```powershell
+[System.IO.File]::ReadAllBytes('cells_in_file') | gol.exe -fb
+```
+)
 
-Multiple instances of gol could also be chained together like this: `gol -tb | gol -fbtb | gol -fb`. There is no real use for doing this, I just thought it was cool.
+Multiple instances of gol could also be chained together like this: 
+```bash
+gol -tb | gol -fbtb | gol -fb
+```
+There is no real use for doing this, I just thought it was cool.
 
 This also means that it is possible to load any file as a cell configuration, including gol itself.
 
