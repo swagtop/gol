@@ -30,6 +30,16 @@ Here are some ways to interact with the game:
 
 You can also drag and drop files into the game window ([unless you are on Wayland](https://github.com/rust-windowing/winit/issues/720)), and it will load a cell configuration into the universe, based on the characters in the file. So long as you only use ASCII characters, the program should be able to work out which characters represent cells, and which represent empty space.
 
+## Piping
+
+You can pipe cell configurations in and out of gol by using the `-fb` (from bytes), `-tb` (to bytes), or both `-fbtb`. Each cell is encoded as 8 bytes in little endian.
+
+You can start the program in GUI mode and pipe the result of whatever you've drawn into a file by starting gol like so: `gol -tb > cells_in_file`. You can then load the file into gol to get the same configuration back: `cat cells_in_file | gol -fb` (if you are using powershell cat will not do, and you will have to load the file like so: `[System.IO.File]::ReadAllBytes('cells_in_file') | gol.exe -fb`)
+
+Multiple instances of gol could also be chained together like this: `gol -tb | gol -fbtb | gol -fb`. There is no real use for doing this, I just thought it was cool.
+
+This also means that it is possible to load any file as a cell configuration, including gol itself.
+
 ## Insights
 
 A lot of time spent making this project, was toying around with optimizations. Does the program run faster or slower if I create a new vector here, or re-use the same vector each time? One of the things I tried out, was a couple of different hash set implementations, and a non-hash one.
@@ -49,5 +59,5 @@ As you can see FxHashSet was almost 2.5 times faster than the standard HashSet i
 
 1. Add UI with options for user to choose on start
 2. Add options to control update speed
-3. Add piping options such that ascii setups, or lists of cell coordinates can be piped into and out of gol
+3. Add more piping options
 
