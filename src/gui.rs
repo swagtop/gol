@@ -394,16 +394,16 @@ fn from_cells_to_bytes(collection: Vec<(i32, i32)>) -> Vec<u8> {
 
     for cell in collection {
         let x_bytes = cell.0.to_le_bytes();
-        bytes.push(x_bytes[3]);
-        bytes.push(x_bytes[2]);
-        bytes.push(x_bytes[1]);
         bytes.push(x_bytes[0]);
+        bytes.push(x_bytes[1]);
+        bytes.push(x_bytes[2]);
+        bytes.push(x_bytes[3]);
         
         let y_bytes = cell.1.to_le_bytes();
-        bytes.push(y_bytes[3]);
-        bytes.push(y_bytes[2]);
-        bytes.push(y_bytes[1]);
         bytes.push(y_bytes[0]);
+        bytes.push(y_bytes[1]);
+        bytes.push(y_bytes[2]);
+        bytes.push(y_bytes[3]);
     }
 
     bytes

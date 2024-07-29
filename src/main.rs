@@ -134,17 +134,17 @@ fn from_bytes_to_cells(bytes: Vec<u8>) -> Vec<(i32, i32)> {
             let i = i * 8;
 
             let cell_x = i32::from_le_bytes([
-                bytes[i+3],
-                bytes[i+2], 
-                bytes[i+1], 
                 bytes[i], 
+                bytes[i+1], 
+                bytes[i+2], 
+                bytes[i+3],
             ]);
 
             let cell_y = i32::from_le_bytes([
-                bytes[i+7],
-                bytes[i+6], 
-                bytes[i+5], 
                 bytes[i+4], 
+                bytes[i+5], 
+                bytes[i+6], 
+                bytes[i+7],
             ]);
 
             collection.push((cell_x, cell_y));
