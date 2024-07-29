@@ -1,6 +1,7 @@
 use fxhash::FxHashSet as HashSet;
 use crate::state::*;
 use nannou::prelude::geom::Tri;
+use nannou::rand::random_range;
 use std::collections::LinkedList;
 
 pub struct SingleState {
@@ -93,6 +94,11 @@ impl State for SingleState {
 
     fn count_cells(&self) -> usize {
         self.cells.len()
+    }
+
+    fn random_cell(&self) -> (i32, i32) {
+        let random_index = random_range(0, self.cells.len());
+        *(self.cells.iter().nth(random_index).unwrap())
     }
     
     fn generation(&self) -> usize {

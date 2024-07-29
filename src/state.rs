@@ -13,6 +13,7 @@ pub trait State {
     fn insert_cell_rel(&mut self, cell: (i32, i32), view: (f64, f64));
     fn collect_cells(&self) -> Vec<(i32, i32)>;
     fn count_cells(&self) -> usize;
+    fn random_cell(&self) -> (i32, i32);
     fn generation(&self) -> usize;
     fn get_tris(
         &self, 

@@ -5,6 +5,7 @@ use fxhash::FxHashSet as HashSet;
 use crate::state::*;
 use nannou::prelude::geom::Tri;
 use nannou::color::Rgb;
+use nannou::rand::random_range;
 use std::collections::LinkedList;
 
 pub struct ParallelState {
@@ -144,8 +145,7 @@ impl State for ParallelState {
 
         self.workers.join();
 
-        let mut cells = self.cells.write().unwrap();        
-
+        let mut cells = self.cells.write().unwrap();
         for kill_list in self.kill_lists.iter() {
             let mut kill_list = kill_list.lock().unwrap();
             for cell in kill_list.iter() {
@@ -198,6 +198,12 @@ impl State for ParallelState {
 
     fn count_cells(&self) -> usize {
         self.cells.read().unwrap().len()
+    }
+
+    fn random_cell(&self) -> (i32, i32) {
+        let cells = self.cells.read().unwrap();
+        let random_index = random_range(0, cells.len());
+        *(cells.iter().nth(random_index).unwrap())
     }
 
     fn generation(&self) -> usize {

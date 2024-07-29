@@ -2,7 +2,6 @@ use nannou::event::Key::*;
 use nannou::prelude::MouseScrollDelta;
 use nannou::prelude::Rect;
 use nannou::prelude::{App, Frame, MouseButton::Left, MouseButton::Right, Update, Vec2};
-use nannou::rand::random_range;
 use nannou::window;
 use nannou::winit::event::ElementState::{Pressed, Released};
 use nannou::winit::event::WindowEvent as WinitEvent;
@@ -131,9 +130,7 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
                     Some(J) => {
                         if model.state.count_cells() != 0 {
                             model.last_view = model.view.clone();
-                            let cells: Vec<(i32, i32)> =
-                                model.state.collect_cells();
-                            let random_cell = cells[random_range(0, cells.len())];
+                            let random_cell = model.state.random_cell();
                             model.view = (-random_cell.1 as f64, random_cell.0 as f64);
                             update_cursor_cell(model);
                         }
