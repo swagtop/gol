@@ -9,11 +9,11 @@ Very simple multithreaded Conway's Game of Life implementation in Rust, using th
 
 The universe of the game contains $2^{32} \times 2^{32}$ unique cells. It is donut shaped, such that structures - like gliders - emerge from the opposite side of the universe when reaching the end. The game keeps track of which cells are alive by storing the coordinates of live cells in a hash set. When cells are given life or killed, their coordinates are simply inserted into or removed from the hash set.
 
-When compiling, I recommend that you use `cargo run --release`, as the performance enhancements in release mode makes the program much nicer to use. If you'd like to run a performance benchmark, add the `benchmark` arg to the binary or cargo command.
+Remember to compile in release mode: `cargo run --release`. If you'd like to run a performance benchmark, add the `benchmark` to the binary or cargo command.
 
 ## Interactions
 
-Here are some ways to interact with the game:
+Here are some ways to interact with gol:
 
 | Input                    | Action                                |
 | :----------------------- | :------------------------------------ |
@@ -34,7 +34,7 @@ You can also drag and drop files into the game window ([unless you are on Waylan
 
 You can pipe cell configurations in and out of gol by using the `-fb` (from bytes), `-tb` (to bytes), or both `-fbtb`. Each cell is encoded as 8 bytes in little endian.
 
-You can start the program in GUI mode and pipe the result of whatever you've drawn into a file by starting gol like so: 
+To pipe out whatever you've drawn in GUI mode into a file, start gol like so: 
 ```bash
 gol -tb > cells_in_file
 ``` 
@@ -42,19 +42,20 @@ You can then load the file into gol to get the same configuration back:
 ```bash
 cat cells_in_file | gol -fb
 ```
-If you are using powershell, cat will mangle the bytes and will not work. You will have to load the file like so: 
+Powershell users beware! Cat will mangle the bytes and will not work. You will have to load the file like so: 
 ```powershell
 [System.IO.File]::ReadAllBytes('cells_in_file') | gol.exe -fb
 ```
-)
+&nbsp;
 
 Multiple instances of gol could also be chained together like this: 
 ```bash
 gol -tb | gol -fbtb | gol -fb
 ```
 There is no real use for doing this, I just thought it was cool.
+&nbsp;
 
-This also means that it is possible to load any file as a cell configuration, including gol itself.
+With piping it is possible to load any file as a cell configuration, including gol itself.
 
 ## Insights
 
