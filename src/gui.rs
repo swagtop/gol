@@ -170,7 +170,7 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
             update_cursor_cell(model);
 
             if model.drawing && model.clicked {
-                model.state.insert_cell((model.cursor_cell.0, model.cursor_cell.1));
+                model.state.insert_cell(model.cursor_cell);
             }
         }
         WinitEvent::MouseInput {
@@ -180,7 +180,7 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
         } => {
             model.clicked = true;
             if model.drawing && model.clicked {
-                model.state.insert_cell((model.cursor_cell.0, model.cursor_cell.1));
+                model.state.insert_cell(model.cursor_cell);
             }
         },
         WinitEvent::MouseInput {
@@ -237,7 +237,7 @@ fn update(app: &App, model: &mut Model, _update: Update) {
         model.state.tick();
 
         if model.drawing && model.clicked {
-            model.state.insert_cell((model.cursor_cell.0, model.cursor_cell.1));
+            model.state.insert_cell(model.cursor_cell);
         }
    }
 }
@@ -275,7 +275,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
         screen_top,
         screen_bottom,
     );
-    let rendered = tris.len();
+    let rendered = tris.len() / 2;
 
     draw.scale(model.scale as f32)
         .mesh()
