@@ -232,8 +232,8 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 
     // Update cells if enough time has passed.
     if model.last_update.elapsed() >= Duration::from_millis(25) && !model.paused && model.state.count_cells() != 0 {
-        model.state.tick();
         model.last_update = Instant::now();
+        model.state.tick();
 
         if model.drawing && model.clicked {
             model.state.insert_cell((-model.cursor_cell.1, model.cursor_cell.0));
