@@ -169,7 +169,7 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
             update_cursor_cell(model);
 
             if model.drawing && model.clicked {
-                model.state.insert_cell((-model.cursor_cell.1, model.cursor_cell.0));
+                model.state.insert_cell((model.cursor_cell.0, model.cursor_cell.1));
             }
         }
         WinitEvent::MouseInput {
@@ -179,7 +179,7 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
         } => {
             model.clicked = true;
             if model.drawing && model.clicked {
-                model.state.insert_cell((-model.cursor_cell.1, model.cursor_cell.0));
+                model.state.insert_cell((model.cursor_cell.0, model.cursor_cell.1));
             }
         },
         WinitEvent::MouseInput {
@@ -236,7 +236,7 @@ fn update(app: &App, model: &mut Model, _update: Update) {
         model.state.tick();
 
         if model.drawing && model.clicked {
-            model.state.insert_cell((-model.cursor_cell.1, model.cursor_cell.0));
+            model.state.insert_cell((model.cursor_cell.0, model.cursor_cell.1));
         }
    }
 }
@@ -256,17 +256,17 @@ fn view(app: &App, model: &Model, frame: Frame) {
     //let cells = model.state.collect_cells();
     let corner = Rect::from_w_h(0.0, 0.0).top_left_of(frame.rect());
     let (screen_left, screen_right) = (
-        ((corner.x() as f64) / model.scale + model.view.0) as i32 - 2, 
-        ((corner.x() + frame.rect().w()) as f64 / model.scale + (model.view.0)) as i32 + 2
+        ((corner.x() as f64) / model.scale - model.view.0) as i32 - 2, 
+        ((corner.x() + frame.rect().w()) as f64 / model.scale - (model.view.0)) as i32 + 2
     );
-    let (screen_top, screen_bottom) = (
-        (((corner.y() as f64) / model.scale + (model.view.1))) as i32 + 2,
-        ((corner.y() - frame.rect().h()) as f64 / model.scale + (model.view.1)) as i32 - 2
+    let (screen_bottom, screen_top) = (
+        ((corner.y() - frame.rect().h()) as f64 / model.scale - (model.view.1)) as i32 - 2,
+        (((corner.y() as f64) / model.scale - (model.view.1))) as i32 + 2
     );
 
     draw.background().color(background_color);
 
-    let (tris, rendered) = model.state.get_tris(
+    let tris = model.state.get_tris(
         model.view,
         cell_color,
         screen_left,
@@ -274,6 +274,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
         screen_top,
         screen_bottom,
     );
+    let rendered = tris.len();
 
     draw.scale(model.scale as f32)
         .mesh()
@@ -369,11 +370,9 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .color(cell_color)
             .left_justify();
 
-        let status = {
-            match model.paused {
-                true => "Paused",
-                _ => "Running"
-            }
+        let status = match model.paused {
+            true => "Paused",
+            _ => "Running"
         };
 
         draw.text(status)

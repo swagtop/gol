@@ -23,10 +23,12 @@ pub trait State {
         screen_right: i32,
         screen_top: i32,
         screen_bottom: i32
-    ) -> (LinkedList<Tri<([f32; 3], nannou::prelude::rgb::Rgb)>>, usize);
+    ) -> LinkedList<Tri<([f32; 3], nannou::prelude::rgb::Rgb)>>;
 }
 
 pub fn state() -> Box<dyn State> {
+
+    return Box::new(single::single_state());
     match thread::available_parallelism() {
         Ok(_) => Box::new(parallel::parallel_state()),
         Err(_) => Box::new(single::single_state()),

@@ -113,11 +113,11 @@ impl State for SingleState {
         screen_right: i32,
         screen_top: i32,
         screen_bottom: i32
-    ) -> (LinkedList<Tri<([f32; 3], nannou::prelude::rgb::Rgb)>>, usize) {
+    ) -> LinkedList<Tri<([f32; 3], nannou::prelude::rgb::Rgb)>> {
         let mut tri_list = LinkedList::default();
-
-        for cell in self.cells.iter().filter(|cell| cell.0 > screen_bottom && cell.0 < screen_top && -cell.1 > screen_left && -cell.1 < screen_right) {
-            let point = [(cell.1 as f64 + view.0 - 0.5) as f32, (-cell.0 as f64 + view.1 - 0.5) as f32];
+        
+        for cell in self.cells.iter().filter(|cell| cell.0 > screen_left && cell.0 < screen_right && cell.1 > screen_bottom && cell.1 < screen_top) {
+            let point = [(cell.0 as f64 + view.0 - 0.5) as f32, (cell.1 as f64 + view.1 - 0.5) as f32];
 
             let first_tri = nannou::prelude::geom::Tri([
                 ([point[0], point[1], 0.0], cell_color),
@@ -135,7 +135,6 @@ impl State for SingleState {
             tri_list.push_front(second_tri);
         }
 
-        let rendered = tri_list.len() / 2;
-        (tri_list, rendered)
+        tri_list
     }
 }
