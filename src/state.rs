@@ -5,15 +5,16 @@ use crate::single;
 use nannou::prelude::geom::Tri;
 use std::collections::LinkedList;
 
+pub type Cell = (i32, i32);
+
 pub trait State {
     fn tick(&mut self);
-    fn insert_cells(&mut self, cells: Vec<(i32, i32)>);
-    fn insert_cells_rel(&mut self, cells: Vec<(i32, i32)>, view: (f64, f64));
-    fn insert_cell(&mut self, cell: (i32, i32));
-    fn insert_cell_rel(&mut self, cell: (i32, i32), view: (f64, f64));
-    fn collect_cells(&self) -> Vec<(i32, i32)>;
+    fn insert_cells(&mut self, cells: Vec<Cell>);
+    fn insert_cells_rel(&mut self, cells: Vec<Cell>, view: (f64, f64));
+    fn insert_cell(&mut self, cell: Cell);
+    fn collect_cells(&self) -> Vec<Cell>;
     fn count_cells(&self) -> usize;
-    fn random_cell(&self) -> (i32, i32);
+    fn random_cell(&self) -> Cell;
     fn generation(&self) -> usize;
     fn get_tris(
         &self, 
@@ -27,8 +28,6 @@ pub trait State {
 }
 
 pub fn state() -> Box<dyn State> {
-
-    return Box::new(single::single_state());
     match thread::available_parallelism() {
         Ok(_) => Box::new(parallel::parallel_state()),
         Err(_) => Box::new(single::single_state()),
@@ -36,7 +35,7 @@ pub fn state() -> Box<dyn State> {
 }
 
 // Returns arrays of the coordinates of the neighbors of the cells coordinates given.
-pub fn get_neighbors(coordinates: &(i32, i32)) -> [(i32, i32); 8] {
+pub fn get_neighbors(coordinates: &Cell) -> [Cell; 8] {
     let (x, y) = *coordinates;
     let (x_left, x_right) = (x - 1, x + 1);
     let (y_up, y_down) = (y - 1, y + 1);
@@ -53,7 +52,7 @@ pub fn get_neighbors(coordinates: &(i32, i32)) -> [(i32, i32); 8] {
     ]
 }
 
-pub fn count_living_neighbors(neighbors: &[(i32, i32); 8], cells: &HashSet<(i32, i32)>) -> u8 {
+pub fn count_living_neighbors(neighbors: &[Cell; 8], cells: &HashSet<Cell>) -> u8 {
     cells.contains(&neighbors[0]) as u8
         + cells.contains(&neighbors[1]) as u8
         + cells.contains(&neighbors[2]) as u8

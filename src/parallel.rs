@@ -9,12 +9,12 @@ use nannou::rand::random_range;
 use std::collections::LinkedList;
 
 pub struct ParallelState {
-    cells: Arc<RwLock<HashSet<(i32, i32)>>>,
+    cells: Arc<RwLock<HashSet<Cell>>>,
     thread_amount: usize,
-    kill_lists: Arc<Vec<Mutex<Vec<(i32, i32)>>>>,
-    res_lists: Arc<Vec<Mutex<Vec<(i32, i32)>>>>,
+    kill_lists: Arc<Vec<Mutex<Vec<Cell>>>>,
+    res_lists: Arc<Vec<Mutex<Vec<Cell>>>>,
     tri_lists: Arc<Vec<Mutex<LinkedList<Tri<([f32; 3], Rgb)>>>>>,
-    cells_vec: Arc<RwLock<Vec<(i32, i32)>>>,
+    cells_vec: Arc<RwLock<Vec<Cell>>>,
     workers: ThreadPool,
     generation: usize,
 }
@@ -85,7 +85,7 @@ impl State for ParallelState {
                 let mut res_list = thread_res_lists[thread_number].lock().unwrap();
                 
                 for cell in slice {
-                    let neighbors: [(i32, i32); 8] = get_neighbors(&cell);
+                    let neighbors: [Cell; 8] = get_neighbors(&cell);
                     let neighbor_count = count_living_neighbors(&neighbors, &cells);
                     if neighbor_count < 2 || neighbor_count > 3 {
                         kill_list.push(*cell);
@@ -96,7 +96,7 @@ impl State for ParallelState {
                         .iter()
                         .filter(|&&neighbor| !cells.contains(&neighbor))
                     {
-                        let neighbor_neighbors: [(i32, i32); 8] = get_neighbors(&neighbor);
+                        let neighbor_neighbors: [Cell; 8] = get_neighbors(&neighbor);
                         let neighbor_count = count_living_neighbors(&neighbor_neighbors, &cells);
                         if neighbor_count == 3 {
                             res_list.push(*neighbor);
@@ -121,7 +121,7 @@ impl State for ParallelState {
             let mut res_list = thread_res_lists[self.thread_amount - 1].lock().unwrap();
             
             for cell in slice {
-                let neighbors: [(i32, i32); 8] = get_neighbors(&cell);
+                let neighbors: [Cell; 8] = get_neighbors(&cell);
                 let neighbor_count = count_living_neighbors(&neighbors, &cells);
                 if neighbor_count < 2 || neighbor_count > 3 {
                     kill_list.push(*cell);
@@ -132,7 +132,7 @@ impl State for ParallelState {
                     .iter()
                     .filter(|&&neighbor| !cells.contains(&neighbor))
                 {
-                    let neighbor_neighbors: [(i32, i32); 8] = get_neighbors(&neighbor);
+                    let neighbor_neighbors: [Cell; 8] = get_neighbors(&neighbor);
                     let neighbor_count = count_living_neighbors(&neighbor_neighbors, &cells);
                     if neighbor_count == 3 {
                         res_list.push(*neighbor);
@@ -161,7 +161,7 @@ impl State for ParallelState {
         }    
     }
 
-    fn insert_cells(&mut self, mut collection: Vec<(i32, i32)>) {
+    fn insert_cells(&mut self, mut collection: Vec<Cell>) {
         let mut cells = self.cells.write().unwrap();
 
         for cell in collection.drain(0..) {
@@ -169,7 +169,7 @@ impl State for ParallelState {
         }
     }
 
-    fn insert_cells_rel(&mut self, mut collection: Vec<(i32, i32)>, view: (f64, f64)) {
+    fn insert_cells_rel(&mut self, mut collection: Vec<Cell>, view: (f64, f64)) {
         let mut cells = self.cells.write().unwrap();
         
         for cell in collection.drain(0..) {
@@ -177,15 +177,11 @@ impl State for ParallelState {
         }
     }
     
-    fn insert_cell(&mut self, cell: (i32, i32)) {
+    fn insert_cell(&mut self, cell: Cell) {
         self.cells.write().unwrap().insert(cell);
     }
     
-    fn insert_cell_rel(&mut self, cell: (i32, i32), view: (f64, f64)) {
-        self.cells.write().unwrap().insert((cell.0 + view.1.floor() as i32, cell.1 - view.0.floor() as i32));
-    }
-
-    fn collect_cells(&self) -> Vec<(i32, i32)> {
+    fn collect_cells(&self) -> Vec<Cell> {
         let cells = self.cells.read().unwrap();
         let mut collection = Vec::default();
 
@@ -200,7 +196,7 @@ impl State for ParallelState {
         self.cells.read().unwrap().len()
     }
 
-    fn random_cell(&self) -> (i32, i32) {
+    fn random_cell(&self) -> Cell {
         let cells = self.cells.read().unwrap();
         let random_index = random_range(0, cells.len());
         *(cells.iter().nth(random_index).unwrap())
@@ -214,18 +210,12 @@ impl State for ParallelState {
         &self, 
         view: (f64, f64), 
         cell_color: nannou::prelude::rgb::Rgb,
-        //screen_left: i32,
-        //screen_right: i32,
-        //screen_top: i32,
-        //screen_bottom: i32
         screen_left: i32,
         screen_right: i32,
         screen_top: i32,
         screen_bottom: i32
 
     ) -> LinkedList<Tri<([f32; 3], nannou::prelude::rgb::Rgb)>> {
-        //self.cells_vec.write().unwrap().extend(self.cells.read().unwrap().iter().filter(|cell| cell.0 > screen_bottom && cell.0 < screen_top && -cell.1 > screen_left && -cell.1 < screen_right).copied());
-        //
         self.cells_vec.write().unwrap().extend(
             self.cells
                 .read()
@@ -244,7 +234,6 @@ impl State for ParallelState {
 
         // Worker threads
         for thread_number in 0..self.thread_amount - 1 {
-            //println!("{}", self.workers.active_count());
             let thread_cells = Arc::clone(&self.cells_vec);
             let thread_tri_lists = Arc::clone(&self.tri_lists);
             let this_thread_distribution = Arc::clone(&thread_distribution);

@@ -3,6 +3,7 @@ use std::thread;
 use std::io::{self, Read};
 use std::time::Instant;
 use nannou::rand::random_range;
+use crate::state::Cell;
 
 mod parallel;
 mod single;
@@ -15,7 +16,7 @@ extern crate lazy_static;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let mut start_cells: Vec<(i32, i32)> = Vec::default();
+    let mut start_cells: Vec<Cell> = Vec::default();
 
     // Run benchmark if arg is given.
     if args.len() != 1 {
@@ -125,7 +126,7 @@ fn print_help() {
     println!("{}", help_string);
 }
 
-fn from_bytes_to_cells(bytes: Vec<u8>) -> Vec<(i32, i32)> {
+fn from_bytes_to_cells(bytes: Vec<u8>) -> Vec<Cell> {
     let cell_amount = (bytes.len() - (bytes.len() % 8)) / 8;
     let mut collection = Vec::default();
 

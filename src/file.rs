@@ -1,9 +1,10 @@
 use std::fs;
+use crate::state::Cell;
 
 // Character order from: https://stackoverflow.com/a/74186686
 const ORDER: &str = " `.-':_,^=;><+!rc*/z?sLTv)J7(|Fi{C}fI31tlu[neoZ5Yxjya]2ESwqkP6h9d4VpOGbUAKXHm8RD#$Bg0MNWQ%&@";
 
-pub fn cells_from_file(file_path: String) -> Vec<(i32, i32)> {
+pub fn cells_from_file(file_path: String) -> Vec<Cell> {
     let mut cells = Vec::default();
 
     let mut cell_char: Option<char> = None;
@@ -36,7 +37,7 @@ pub fn cells_from_file(file_path: String) -> Vec<(i32, i32)> {
     for (row, line) in lines.enumerate() {
         for (col, character) in line.chars().enumerate() {
             if character == cell_char.unwrap() {
-                cells.push((row as i32, col as i32));
+                cells.push((col as i32, row as i32));
             } 
         }
     }

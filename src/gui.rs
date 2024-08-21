@@ -10,12 +10,13 @@ use nannou::color::Rgb;
 use std::sync::Mutex;
 use std::io::{self, Write};
 use crate::file;
+use crate::state::Cell;
 
 lazy_static! {
-    static ref START_CELLS: Mutex<Vec<(i32, i32)>> = Mutex::new(Vec::new());
+    static ref START_CELLS: Mutex<Vec<Cell>> = Mutex::new(Vec::new());
 }
 
-pub fn run_gui(mut start_cells: Vec<(i32, i32)>) {
+pub fn run_gui(mut start_cells: Vec<Cell>) {
     START_CELLS.lock().unwrap().append(&mut start_cells);
     nannou::app(model).update(update).run();
 }
@@ -26,7 +27,7 @@ struct Model {
     view: (f64, f64),
     last_view: (f64, f64),
     cursor_location: Vec2,
-    cursor_cell: (i32, i32),
+    cursor_cell: Cell,
     scale: f64,
     clicked: bool,
     show_stats: bool,
@@ -51,7 +52,7 @@ fn model(app: &App) -> Model {
     let view: (f64, f64) = (0.0, 0.0).into();
     let last_view: (f64, f64) = view.clone();
     let cursor_location: Vec2 = (0.0, 0.0).into();
-    let cursor_cell: (i32, i32) = (0, 0);
+    let cursor_cell: Cell = (0, 0);
     let scale: f64 = 10.0;
     let clicked: bool = false;
     let show_stats: bool = false;
@@ -385,7 +386,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
     draw.to_frame(app, &frame).unwrap();
 }
 
-fn from_cells_to_bytes(collection: Vec<(i32, i32)>) -> Vec<u8> {
+fn from_cells_to_bytes(collection: Vec<Cell>) -> Vec<u8> {
     let mut bytes = Vec::default();
 
     for cell in collection {
