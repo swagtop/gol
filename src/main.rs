@@ -63,7 +63,7 @@ fn run_benchmark() {
     
     let progress_string = format!("0 out of {}", runs);
     eprint!("{: ^width$}\r", progress_string, width = line_len);
-    for i in 1..=runs {
+    for i in 1..runs - 1 {
         let mut state = state::state();
 
         let mut collection = Vec::default();
