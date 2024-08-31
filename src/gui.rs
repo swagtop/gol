@@ -194,6 +194,7 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
             ..
         } => {
             model.drawing = !model.drawing;
+            update_cursor_cell(model);
         }
         WinitEvent::MouseWheel {
             delta: MouseScrollDelta::LineDelta(_, y),

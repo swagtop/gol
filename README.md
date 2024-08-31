@@ -40,11 +40,7 @@ gol -tb > cells_in_file
 ``` 
 You can then load the file into gol to get the same configuration back: 
 ```bash
-cat cells_in_file | gol -fb
-```
-Powershell users beware! Cat will mangle the bytes and will not work. You will have to load the file like so: 
-```powershell
-[System.IO.File]::ReadAllBytes('cells_in_file') | gol.exe -fb
+gol -fb < cells_in_file
 ```
 &nbsp;
 
