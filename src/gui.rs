@@ -132,7 +132,7 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
                         if model.state.count_cells() != 0 {
                             model.last_view = model.view.clone();
                             let random_cell = model.state.random_cell();
-                            model.view = (-random_cell.1 as f64, random_cell.0 as f64);
+                            model.view = (-random_cell.0 as f64, -random_cell.1 as f64);
                             update_cursor_cell(model);
                         }
                     }
