@@ -37,7 +37,7 @@ pub fn cells_from_file(file_path: String) -> Vec<Cell> {
     for (row, line) in lines.enumerate() {
         for (col, character) in line.chars().enumerate() {
             if character == cell_char.unwrap() {
-                cells.push((col as i32, row as i32));
+                cells.push(((col as i32), (row as i32)));
             } 
         }
     }

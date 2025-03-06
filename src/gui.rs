@@ -4,7 +4,17 @@ use nannou::prelude::Rect;
 use nannou::prelude::{App, Frame, MouseButton::Left, MouseButton::Right, Update, Vec2};
 use nannou::window;
 use nannou::winit::event::ElementState::{Pressed, Released};
-use nannou::winit::event::WindowEvent as WinitEvent;
+use nannou::winit::event::WindowEvent;
+use nannou::winit::event::WindowEvent::{
+    KeyboardInput,
+    CursorMoved,
+    MouseInput,
+    MouseWheel,
+    HoveredFile,
+    DroppedFile,
+    HoveredFileCancelled     
+};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 use nannou::color::Rgb;
 use std::sync::Mutex;
@@ -13,11 +23,13 @@ use crate::file;
 use crate::state::Cell;
 
 lazy_static! {
-    static ref START_CELLS: Mutex<Vec<Cell>> = Mutex::new(Vec::new());
+    static ref INPUT_CELLS: Mutex<Vec<Cell>> = Mutex::new(Vec::new());
+    static ref SEND_CELLS_TO_STDOUT: AtomicBool = AtomicBool::new(false);
 }
 
-pub fn run_gui(mut start_cells: Vec<Cell>) {
-    START_CELLS.lock().unwrap().append(&mut start_cells);
+pub fn run_gui(mut input_cells: Vec<Cell>, send_cells_to_stdout: bool) {
+    INPUT_CELLS.lock().unwrap().append(&mut input_cells);
+    SEND_CELLS_TO_STDOUT.store(send_cells_to_stdout, Ordering::Relaxed);
     nannou::app(model).update(update).run();
 }
 
@@ -73,7 +85,7 @@ fn model(app: &App) -> Model {
     }
     state.insert_cells(collection);
     */
-    state.insert_cells(START_CELLS.lock().unwrap().to_vec());
+    state.insert_cells(INPUT_CELLS.lock().unwrap().to_vec());
 
     Model {
         _window,
@@ -103,9 +115,9 @@ fn update_cursor_cell(model: &mut Model) -> () {
 }
 
 // https://docs.rs/winit/0.28.7/winit/event/enum.WindowEvent.html
-fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
+fn raw_window_event(app: &App, model: &mut Model, winit_event: &WindowEvent) {
     match winit_event {
-        WinitEvent::KeyboardInput { input, .. } => {
+        KeyboardInput { input, .. } => {
             if input.state == Pressed {
                 match input.virtual_keycode {
                     Some(Minus) | Some(NumpadSubtract) => {
@@ -127,7 +139,7 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
                         model.view = (0.0, 0.0).into();
                         update_cursor_cell(model);
                     }
-                    Some(A) => model.view = (0b01111111111111111111111111111110i32 as f64, 0b01111111111111111111111111111110i32 as f64),
+                    Some(A) => model.view = ((i32::MAX - 1) as f64, (i32::MAX - 1) as f64),
                     Some(J) => {
                         if model.state.count_cells() != 0 {
                             model.last_view = model.view.clone();
@@ -147,7 +159,13 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
                         model.state.tick();
                     }
                     Some(Escape) => {
-                        let _ = io::stdout().lock().write_all(&from_cells_to_bytes(model.state.collect_cells()));
+                        if SEND_CELLS_TO_STDOUT.load(Ordering::Relaxed) {
+                            let _ = io::stdout().lock().write_all(
+                                &from_cells_to_bytes(
+                                    model.state.collect_cells()
+                                )
+                            );
+                        }
                         app.quit();
                     }
                     _ => (),
@@ -160,7 +178,7 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
                 }
             }
         }
-        WinitEvent::CursorMoved { position, .. } => {
+        CursorMoved { position, .. } => {
             let (frame_x, frame_y) = (app.window_rect().w() / 2.0, app.window_rect().h() / 2.0);
             let (x, y) = (
                 (position.x as f32 / app.main_window().scale_factor()) - frame_x, 
@@ -173,7 +191,7 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
                 model.state.insert_cell(model.cursor_cell);
             }
         }
-        WinitEvent::MouseInput {
+        MouseInput {
             state: Pressed,
             button: Left,
             ..
@@ -183,12 +201,12 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
                 model.state.insert_cell(model.cursor_cell);
             }
         },
-        WinitEvent::MouseInput {
+        MouseInput {
             state: Released,
             button: Left,
             ..
         } => model.clicked = false,
-        WinitEvent::MouseInput {
+        MouseInput {
             state: Pressed,
             button: Right,
             ..
@@ -196,7 +214,7 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
             model.drawing = !model.drawing;
             update_cursor_cell(model);
         }
-        WinitEvent::MouseWheel {
+        MouseWheel {
             delta: MouseScrollDelta::LineDelta(_, y),
             ..
         } => {
@@ -206,12 +224,12 @@ fn raw_window_event(app: &App, model: &mut Model, winit_event: &WinitEvent) {
             }
             update_cursor_cell(model);
         }
-        WinitEvent::HoveredFile { .. } => model.hovering_file = true,
-        WinitEvent::DroppedFile(path) => {
+        HoveredFile { .. } => model.hovering_file = true,
+        DroppedFile(path) => {
             model.hovering_file = false;
             model.state.insert_cells_rel(file::cells_from_file(path.as_path().to_str().unwrap().to_string()), model.view);
         }
-        WinitEvent::HoveredFileCancelled => model.hovering_file = false,
+        HoveredFileCancelled => model.hovering_file = false,
         _ => (),
     }
 }

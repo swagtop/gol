@@ -1,9 +1,11 @@
-use std::env;
 use std::thread;
 use std::io::{self, Read};
 use std::time::Instant;
-use nannou::rand::random_range;
+use nannou::rand::rand::prelude::StdRng;
+use nannou::rand::{SeedableRng, RngCore};
 use crate::state::Cell;
+
+use clap::{Arg, ArgAction, Command};
 
 mod parallel;
 mod single;
@@ -15,45 +17,87 @@ mod file;
 extern crate lazy_static;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
     let mut start_cells: Vec<Cell> = Vec::default();
 
-    // Run benchmark if arg is given.
-    if args.len() != 1 {
-        match args[1].as_str() {
-            "benchmark" | "--benchmark" | "-b" => { run_benchmark(); return; }
-            "help" | "--help" | "-h" => { print_help(); return; }
-            "version" | "--version" | "-v" => { println!("gol version 1.0.0"); return; }
-            "-fb" => {
-                let mut buffer = Vec::new();
-                let _ = io::stdin().read_to_end(&mut buffer);
-                start_cells.append(&mut from_bytes_to_cells(buffer));
-            }
-            "-fbtb" => {
-                let mut buffer = Vec::new();
-                let _ = io::stdin().read_to_end(&mut buffer);
-                start_cells.append(&mut from_bytes_to_cells(buffer));
-            }
-            "-tb" => {
-            }
-            _ => ()
-        }
+    // let mut r = StdRng::seed_from_u64(0);
+    // for _ in 0..1000000 {
+    //     let cell = (
+    //         r.next_u32() as i32 % 1000,
+    //         r.next_u32() as i32 % 1000
+    //     );
+    //     start_cells.push(cell);
+    // }
+
+    let matches = Command::new("gol")
+        .version("0.1.1")
+        .about("A simple Conway's Game of Life implementation")
+        .long_about([
+            "Control the GUI with the following inputs:",
+            "| Input                    | Action                       |",
+            "| :----------------------- | :--------------------------- |",
+            "| `left-click`             | Move view in mouse direction |",
+            "| `+` `-` (or scrollwheel) | Zoom in or out               |",
+            "| `tab`                    | Toggle stats                 |",
+            "| `c`                      | Toggle dark mode             |",
+            "| `space`                  | Toggle pause                 |",
+            "| `t`                      | Advance cells by one tick    |",
+            "| `h`                      | Jump back home, to (0, 0)    |",
+            "| `j`                      | Jump to random live cell     |",
+            "| `z`                      | Undo last jump               |",
+        ].join("\n"))
+        .arg(
+            Arg::new("benchmark")
+                .short('b')
+                .long("benchmark")
+                .help("Perform benchmark")
+                .value_parser(clap::value_parser!(u32))
+        )
+        .arg(
+            Arg::new("input-bytes")
+                .short('i')
+                .long("input-bytes")
+                .help("Build cells from bytes read from stdin")
+                .action(ArgAction::SetTrue)
+        )
+        .arg(
+            Arg::new("output-bytes")
+                .short('o')
+                .long("output-bytes")
+                .help("Output bytes of cells to stdout")
+                .action(ArgAction::SetTrue)
+        )
+        .get_matches();
+
+    if let Some(benchmark_passes) = matches.get_one::<u32>("benchmark") {
+        run_benchmark(*benchmark_passes);
+        return;
+    } 
+    else if matches.contains_id("benchmark") {
+        run_benchmark(1);
+        return;
     }
 
-    gui::run_gui(start_cells);
+    if matches.get_flag("input-bytes") {
+        let mut buffer = Vec::new();
+        let _ = io::stdin().lock().read_to_end(&mut buffer);
+        start_cells.append(&mut from_bytes_to_cells(buffer));
+    }
+    let send_cells_to_stdout = matches.get_flag("output-bytes");
+
+    gui::run_gui(start_cells, send_cells_to_stdout);
 }
 
-fn run_benchmark() {
+fn run_benchmark(benchmark_passes: u32) {
     let start_bench_time = Instant::now();
 
     let mut time_vec = Vec::new();
 
     let updates_per_run = 500;
-    let cell_amount = 375000;
-    let runs = 100;
+    let cell_amount = 1000000;
+    let runs = benchmark_passes;
 
     let label_string = format!(
-        "   Running {} updates on {} cells, {} times ↴   ",
+        "   Running {} updates on {} cells, {} time(s) ↴   ",
         updates_per_run, cell_amount, runs
     );
     let line_len = label_string.chars().count();
@@ -63,12 +107,17 @@ fn run_benchmark() {
     
     let progress_string = format!("0 out of {}", runs);
     eprint!("{: ^width$}\r", progress_string, width = line_len);
-    for i in 1..runs - 1 {
+    for i in 0..runs {
         let mut state = state::state();
 
         let mut collection = Vec::default();
+        let mut r = StdRng::seed_from_u64(0);
+
         for _ in 0..cell_amount {
-            let cell = (random_range(-1000, 1000), random_range(-1000, 1000));
+            let cell = (
+                r.next_u32() as i32 % 1000,
+                r.next_u32() as i32 % 1000
+            );
             collection.push(cell);
         }
         state.insert_cells(collection);
@@ -108,24 +157,6 @@ fn run_benchmark() {
     }
 }
 
-fn print_help() {
-    let help_string = "\
-| Input                    | Action                       |
-| :----------------------- | :--------------------------- |
-| `left-click`             | Move view in mouse direction |
-| `+` `-` (or scrollwheel) | Zoom in or out               |
-| `tab`                    | Toggle stats                 |
-| `c`                      | Toggle dark mode             |
-| `space`                  | Toggle pause                 |
-| `t`                      | Advance cells by one tick    |
-| `h`                      | Jump back home, to (0, 0)    |
-| `j`                      | Jump to random live cell     |
-| `z`                      | Undo last jump               |\
-    ";
-
-    println!("{}", help_string);
-}
-
 fn from_bytes_to_cells(bytes: Vec<u8>) -> Vec<Cell> {
     let cell_amount = (bytes.len() - (bytes.len() % 8)) / 8;
     let mut collection = Vec::default();
@@ -133,7 +164,6 @@ fn from_bytes_to_cells(bytes: Vec<u8>) -> Vec<Cell> {
     if cell_amount > 0 {
         for i in 0..cell_amount {
             let i = i * 8;
-
             let cell_x = i32::from_le_bytes([
                 bytes[i], 
                 bytes[i+1], 
