@@ -32,7 +32,7 @@ You can also drag and drop files into the game window ([unless you are on Waylan
 
 ## Piping
 
-You can pipe cell configurations in and out of gol by using the `-fb` (from bytes), `-tb` (to bytes), or both `-fbtb`. Each cell is encoded as 8 bytes in little endian.
+You can pipe cell configurations in and out of gol by using the `-i` (input bytes), `-o` (output bytes), or both `-io`. Each cell is encoded as 8 bytes in little endian.
 
 To pipe out whatever you've drawn in GUI mode into a file, start gol like so: 
 ```bash
