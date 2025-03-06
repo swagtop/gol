@@ -36,17 +36,17 @@ You can pipe cell configurations in and out of gol by using the `-fb` (from byte
 
 To pipe out whatever you've drawn in GUI mode into a file, start gol like so: 
 ```bash
-gol -tb > cells_in_file
+gol -o > cells_in_file
 ``` 
 You can then load the file into gol to get the same configuration back: 
 ```bash
-gol -fb < cells_in_file
+gol -i < cells_in_file
 ```
 &nbsp;
 
 Multiple instances of gol could also be chained together like this: 
 ```bash
-gol -tb | gol -fbtb | gol -fb
+gol -o | gol -io | gol -o
 ```
 There is no real use for doing this, I just thought it was cool.
 &nbsp;
