@@ -9,7 +9,7 @@ Very simple multithreaded Conway's Game of Life implementation in Rust, using th
 
 The universe of the game contains $2^{32} \times 2^{32}$ unique cells. It is donut shaped, such that structures - like gliders - emerge from the opposite side of the universe when reaching the end. The game keeps track of which cells are alive by storing the coordinates of live cells in a hash set. When cells are given life or killed, their coordinates are simply inserted into or removed from the hash set.
 
-Remember to compile in release mode: `cargo run --release`. If you'd like to run a performance benchmark, add the `benchmark` to the binary or cargo command.
+To run a performance benchmark, use the `--benchmark` flag, with the amount of passes you would like to be run.
 
 ## Interactions
 
@@ -46,7 +46,7 @@ gol -i < cells_in_file
 
 Multiple instances of gol could also be chained together like this: 
 ```bash
-gol -o | gol -io | gol -o
+gol -o | gol -io | gol -i
 ```
 There is no real use for doing this, I just thought it was cool.
 &nbsp;
