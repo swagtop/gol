@@ -58,10 +58,10 @@
         # For `nix develop`:
         devShell = pkgs.mkShell {
           nativeBuildInputs = all_deps;
+          RUSTFLAGS = "-C link-args=-Wl,-rpath,${pkgs.lib.makeLibraryPath all_deps}";
           shellHook = ''
             export DEV_SHELL='gol '
             export CARGO_MANIFEST_DIR=$(pwd)
-            export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${pkgs.lib.makeLibraryPath all_deps}"
           '';
         };
       }
