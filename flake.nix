@@ -2,7 +2,7 @@
   inputs = {
     naersk.url = "github:nix-community/naersk";
     rust-overlay.url = "github:oxalica/rust-overlay";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
   outputs = { self, flake-utils, naersk, nixpkgs, rust-overlay }:
@@ -57,10 +57,10 @@
 
         # For `nix develop`:
         devShell = pkgs.mkShell {
+          name = "nannou";
           nativeBuildInputs = all_deps;
           RUSTFLAGS = "-C link-args=-Wl,-rpath,${pkgs.lib.makeLibraryPath all_deps}";
           shellHook = ''
-            export DEV_SHELL='gol '
             export CARGO_MANIFEST_DIR=$(pwd)
           '';
         };
