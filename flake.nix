@@ -12,7 +12,12 @@
   };
 
   outputs =
-    { nixpkgs, bevy-flake, fenix, ... }:
+    {
+      nixpkgs,
+      bevy-flake,
+      fenix,
+      ...
+    }:
     let
       bf = bevy-flake.override (default: {
         src = ./.;
@@ -38,12 +43,22 @@
           systemTarget = pkgs.stdenv.hostPlatform.config;
           manifest = nixpkgs.lib.importTOML ./Cargo.toml;
         in
-        bf.packages.${system} // {
-          default = pkgs.writeShellScriptBin manifest.package.name ''
-            exec ${pkgs.steam-run-free}/bin/steam-run "${
-              bf.packages.${system}.targets.${systemTarget}
-            }/bin/${manifest.package.name}"
-          '';
+        bf.packages.${system}
+        // {
+          default =
+            if pkgs.stdenv.isLinux then
+              pkgs.writeShellScriptBin manifest.package.name ''
+                exec ${pkgs.steam-run-free}/bin/steam-run "${
+                  bf.packages.${system}.targets.${systemTarget}
+                }/bin/${manifest.package.name}"
+              ''
+            else
+              pkgs.rustPlatform.buildRustPackage {
+                inherit (manifest.package) version;
+                pname = manifest.package.name;
+                src = ./.;
+                cargoLock.lockFile = ./Cargo.lock;
+              };
         }
       );
     };
