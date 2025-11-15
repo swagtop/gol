@@ -15,7 +15,7 @@
     { nixpkgs, bevy-flake, fenix, ... }:
     let
       bf = bevy-flake.override (default: {
-        buildSource = ./.;
+        src = ./.;
         mkRustToolchain =
           targets: pkgs:
           let

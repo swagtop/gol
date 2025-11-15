@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1763211518,
-        "narHash": "sha256-VVNopke2snbjYDBbf5OvNErP6Tx6mpLqqSiZqeFKa5Q=",
+        "lastModified": 1763218259,
+        "narHash": "sha256-5W0ykVJVm5qnhCSh4uiPlY6OdAFdtj5dlry11vJIv34=",
         "owner": "swagtop",
         "repo": "bevy-flake",
-        "rev": "9fc36d5355f9eeace5bb5a47434d50eb8852ff22",
+        "rev": "e9250c08f964ddffcd5d2048de5069eb9a74b70b",
         "type": "github"
       },
       "original": {
