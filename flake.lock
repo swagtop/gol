@@ -7,16 +7,38 @@
         ]
       },
       "locked": {
-        "lastModified": 1760955730,
-        "narHash": "sha256-0eKzz1jDVgA2QgXIl32dgPnuK6gXoSzkXMUtBBPy4L8=",
+        "lastModified": 1763211518,
+        "narHash": "sha256-VVNopke2snbjYDBbf5OvNErP6Tx6mpLqqSiZqeFKa5Q=",
         "owner": "swagtop",
         "repo": "bevy-flake",
-        "rev": "a801a6733ed1628d065d69c6aefed494f0f81fce",
+        "rev": "9fc36d5355f9eeace5bb5a47434d50eb8852ff22",
         "type": "github"
       },
       "original": {
         "owner": "swagtop",
+        "ref": "dev",
         "repo": "bevy-flake",
+        "type": "github"
+      }
+    },
+    "fenix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "rust-analyzer-src": "rust-analyzer-src"
+      },
+      "locked": {
+        "lastModified": 1763188655,
+        "narHash": "sha256-6fkf0JP1OCVxmyBZRdEVQu9wBwLyTI+idTISoijxpQE=",
+        "owner": "nix-community",
+        "repo": "fenix",
+        "rev": "c684a289edf43cfc5cd1bea7c1b61ab9a0fba99c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "fenix",
         "type": "github"
       }
     },
@@ -38,7 +60,25 @@
     "root": {
       "inputs": {
         "bevy-flake": "bevy-flake",
+        "fenix": "fenix",
         "nixpkgs": "nixpkgs"
+      }
+    },
+    "rust-analyzer-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1762860488,
+        "narHash": "sha256-rMfWMCOo/pPefM2We0iMBLi2kLBAnYoB9thi4qS7uk4=",
+        "owner": "rust-lang",
+        "repo": "rust-analyzer",
+        "rev": "2efc80078029894eec0699f62ec8d5c1a56af763",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rust-lang",
+        "ref": "nightly",
+        "repo": "rust-analyzer",
+        "type": "github"
       }
     }
   },

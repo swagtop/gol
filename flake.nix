@@ -5,14 +5,28 @@
       url = "github:swagtop/bevy-flake/dev";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    { nixpkgs, bevy-flake, ... }:
+    { nixpkgs, bevy-flake, fenix, ... }:
     let
-      bf = bevy-flake.override {
+      bf = bevy-flake.override (default: {
         buildSource = ./.;
-      };
+        mkRustToolchain =
+          targets: pkgs:
+          let
+            fx = fenix.packages.${pkgs.stdenv.hostPlatform.system};
+            channel = "stable"; # For nightly, use "latest".
+          in
+          fx.combine (
+            [ (fx.${channel}.completeToolchain or fx.channel.toolchain) ]
+            ++ map (target: fx.targets.${target}.${channel}.rust-std) targets
+          );
+      });
     in
     {
       inherit (bf) devShells formatter;
@@ -24,7 +38,7 @@
           systemTarget = pkgs.stdenv.hostPlatform.config;
           manifest = nixpkgs.lib.importTOML ./Cargo.toml;
         in
-        {
+        bf.packages.${system} // {
           default = pkgs.writeShellScriptBin manifest.package.name ''
             exec ${pkgs.steam-run-free}/bin/steam-run "${
               bf.packages.${system}.targets.${systemTarget}
