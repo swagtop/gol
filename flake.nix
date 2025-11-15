@@ -1,69 +1,36 @@
 {
   inputs = {
-    naersk.url = "github:nix-community/naersk";
-    rust-overlay.url = "github:oxalica/rust-overlay";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "nixpkgs/nixos-unstable";
+    bevy-flake = {
+      url = "github:swagtop/bevy-flake/dev";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, flake-utils, naersk, nixpkgs, rust-overlay }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        overlays = [ (import rust-overlay) ];
-        pkgs = (import nixpkgs) {
-          inherit system overlays;
-        };
-        naersk' = pkgs.callPackage naersk { };
-        buildInputs = with pkgs; [
-          alsa-lib
-          clang
-          libGL
-          libxkbcommon
-          mold
-          pkg-config
-          udev
-          vulkan-loader
-          xorg.libXcursor
-          xorg.libXi
-          xorg.libXrandr
-        ];
-        nativeBuildInputs = with pkgs; [
-          (rust-bin.selectLatestNightlyWith
-            (toolchain: toolchain.default.override {
-              extensions = [ "rust-src" "clippy" ];
-            }))
-        ];
-        all_deps = with pkgs; [
-          cargo-flamegraph
-          cargo-expand
-          nixpkgs-fmt
-          cmake
-        ] ++ buildInputs ++ nativeBuildInputs;
-      in
-      rec {
-        # For `nix build` & `nix run`:
-        defaultPackage = packages.bevy_template;
-        packages = rec {
-          bevy_template = naersk'.buildPackage {
-            src = ./.;
-            nativeBuildInputs = nativeBuildInputs;
-            buildInputs = buildInputs;
-            postInstall = ''
-              cp -r assets $out/bin/
-            '';
-            # Disables dynamic linking when building with Nix
-            cargoBuildOptions = x: x ++ [ "--no-default-features" ];
-          };
-        };
+  outputs =
+    { nixpkgs, bevy-flake, ... }:
+    let
+      bf = bevy-flake.override {
+        buildSource = ./.;
+      };
+    in
+    {
+      inherit (bf) devShells formatter;
 
-        # For `nix develop`:
-        devShell = pkgs.mkShell {
-          name = "nannou";
-          nativeBuildInputs = all_deps;
-          RUSTFLAGS = "-C link-args=-Wl,-rpath,${pkgs.lib.makeLibraryPath all_deps}";
-          shellHook = ''
-            export CARGO_MANIFEST_DIR=$(pwd)
+      packages = bf.eachSystem (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+          systemTarget = pkgs.stdenv.hostPlatform.config;
+          manifest = nixpkgs.lib.importTOML ./Cargo.toml;
+        in
+        {
+          default = pkgs.writeShellScriptBin manifest.package.name ''
+            exec ${pkgs.steam-run-free}/bin/steam-run "${
+              bf.packages.${system}.targets.${systemTarget}
+            }/bin/${manifest.package.name}"
           '';
-        };
-      }
-    );
+        }
+      );
+    };
 }
