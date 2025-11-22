@@ -19,10 +19,10 @@
       ...
     }:
     let
-      bf = bevy-flake.override (default: {
+      bf = bevy-flake.configure ({ pkgs, ... }: {
         src = ./.;
-        mkRustToolchain =
-          targets: pkgs:
+        rustToolchainFor =
+          targets:
           let
             fx = fenix.packages.${pkgs.stdenv.hostPlatform.system};
             channel = "stable"; # For nightly, use "latest".
