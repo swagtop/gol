@@ -19,24 +19,26 @@
       ...
     }:
     let
-      bf = bevy-flake.configure ({ pkgs, ... }: {
-        src = ./.;
-        rustToolchainFor =
-          targets:
-          let
-            fx = fenix.packages.${pkgs.stdenv.hostPlatform.system};
-            channel = "stable"; # For nightly, use "latest".
-          in
-          fx.combine (
-            [ (fx.${channel}.completeToolchain or fx.channel.toolchain) ]
-            ++ map (target: fx.targets.${target}.${channel}.rust-std) targets
-          );
-      });
+      bf = bevy-flake.configure (
+        { pkgs, ... }:
+        {
+          src = ./.;
+          rustToolchain =
+            targets:
+            let
+              fx = fenix.packages.${pkgs.stdenv.hostPlatform.system};
+              channel = "stable"; # For nightly, use "latest".
+              targets-rust-std = 
+                map (target: fx.targets.${target}.${channel}.rust-std) targets;
+            in
+            fx.combine ([ fx.${channel}.toolchain ] ++ targets-rust-std);
+        }
+      );
     in
     {
       inherit (bf) devShells formatter;
 
-      packages = bf.eachSystem (
+      packages = bf.forSystems (
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
