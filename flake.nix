@@ -19,10 +19,21 @@
       ...
     }:
     let
-      bf = bevy-flake.configure (
+      bf = bevy-flake.lib.configure (
         { pkgs, ... }:
         {
-          src = ./.;
+          src = builtins.path {
+            name = "src";
+            path = ./.;
+            filter =
+              path: type:
+              !(builtins.elem (baseNameOf path) [
+                "flake.lock"
+                "flake.nix"
+                "gol.webp"
+                "README.md"
+              ]);
+          };
           rustToolchain =
             targets:
             let
@@ -38,7 +49,7 @@
     {
       inherit (bf) devShells formatter;
 
-      packages = bf.forSystems (
+      packages = bf.lib.forSystems (
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
@@ -51,7 +62,7 @@
             if pkgs.stdenv.isLinux then
               pkgs.writeShellScriptBin manifest.package.name ''
                 exec ${pkgs.steam-run-free}/bin/steam-run "${
-                  bf.packages.${system}.targets.${systemTarget}
+                  bf.packages.${system}.targets.${systemTarget}.only
                 }/bin/${manifest.package.name}"
               ''
             else
